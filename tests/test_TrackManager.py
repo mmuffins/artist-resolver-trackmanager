@@ -4,7 +4,7 @@ import httpx
 import respx
 import json
 from unittest.mock import AsyncMock, MagicMock, call
-from TrackManager import TrackManager, MbArtistDetails, TrackDetails
+from artist_resolver.trackmanager import TrackManager, MbArtistDetails, TrackDetails
 from mutagen import id3
 from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3
 
