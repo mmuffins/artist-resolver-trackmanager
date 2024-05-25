@@ -1,0 +1,11 @@
+[flake8]
+exclude =
+  __pycache__
+  manage.py
+  settings.py
+  venv
+  .venv
+ignore = 
+  E501 
+  F403, F405, F541
+  W503
