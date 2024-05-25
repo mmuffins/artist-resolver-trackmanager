@@ -11,6 +11,7 @@ setup(
     description="Python library for the artist resolver api",
     url="https://github.com/mmuffins/artist-resolver-trackmanager",
     packages=find_packages(),
+    license_files=("LICENSE",),
     install_requires=requirements,
     python_requires=">=3.12",
 )
