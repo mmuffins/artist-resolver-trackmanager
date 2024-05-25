@@ -595,23 +595,28 @@ class TrackManager:
         # Remove track references from the track manager
         track.manager = None
 
-    async def load_directory(self, directory: str) -> None:
+    async def load_files(self, files: list[str]) -> None:
         """
-        Gets all mp3 files in a directory and reads their id3 tags
+        Loads the provided list of MP3 files and reads their ID3 tags.
+        Throws an exception if any file is not an MP3 file.
         """
-        self.directory = directory
-        self.get_mp3_files()
+        self.clear_data()
+        self.validate_files(files)
+        for file in files:
+            self.tracks.append(TrackDetails(file, self))
+
         await self.read_file_metadata()
 
-    def get_mp3_files(self) -> None:
+    def validate_files(self, files: list[str]) -> None:
         """
-        Recursively gets a list of all mp3 files in the provided folder
+        Validates if all the provided files are MP3 files.
+        Throws an exception if any file is not an MP3 file.
         """
-        for root, dirs, files in os.walk(self.directory):
-            for file in files:
-                if file.endswith(".mp3"):
-                    file_path = os.path.join(root, file)
-                    self.tracks.append(TrackDetails(file_path, self))
+        for file in files:
+            if not file.endswith(".mp3"):
+                raise ValueError(
+                    f"Invalid file type for {file}. Only MP3 files are allowed."
+                )
 
     async def save_files(self) -> None:
         """

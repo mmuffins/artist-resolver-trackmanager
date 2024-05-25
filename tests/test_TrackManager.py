@@ -123,41 +123,6 @@ def create_mock_trackdetails():
 
 
 @pytest.mark.asyncio
-async def test_trackmanager_load_directory(mocker):
-    # Arrange
-    test_directory = "/fake/directory"
-    mocker.patch(
-        "os.walk",
-        return_value=[
-            (f"{test_directory}/dir1/subdir1", (), ("file1.mp3",)),
-            (f"{test_directory}/dir2", ("subdir",), []),
-            (f"{test_directory}/dir3", (), ["file1.ogg", "file2.txt"]),
-            (f"{test_directory}/dir4", ("subdir",), ["file1.mp3", "file2.mp3"]),
-        ],
-    )
-
-    manager = TrackManager()
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
-
-    # Act
-    await manager.load_directory("/fake/directory")
-
-    # Assert
-    manager.read_file_metadata.assert_awaited_once()
-    assert len(manager.tracks) == 3
-    assert os.path.normpath(manager.tracks[0].file_path) == os.path.normpath(
-        "/fake/directory/dir1/subdir1/file1.mp3"
-    )
-    assert os.path.normpath(manager.tracks[1].file_path) == os.path.normpath(
-        "/fake/directory/dir4/file1.mp3"
-    )
-    assert os.path.normpath(manager.tracks[2].file_path) == os.path.normpath(
-        "/fake/directory/dir4/file2.mp3"
-    )
-
-
-@pytest.mark.asyncio
 @respx.mock(assert_all_mocked=True)
 async def test_create_track_file_with_artist_json(mock_id3_tags):
     # Arrange1
@@ -890,3 +855,42 @@ async def test_remove_track_no_remaining_references():
     assert len(manager.tracks) == 0
     assert track2 not in manager.tracks
     assert "mock-artist1-id" not in manager.artist_data
+
+
+@pytest.mark.asyncio
+async def test_load_files_valid_files(mocker):
+    # Arrange
+    files = ["/fake/path/file1.mp3", "/fake/path/file2.mp3", "/fake/path/file3.mp3"]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(files)
+
+    # Assert
+    manager.read_file_metadata.assert_awaited_once()
+    assert len(manager.tracks) == len(files)
+    for i in range(len(files)):
+        assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
+            files[i]
+        )
+
+
+@pytest.mark.asyncio
+async def test_load_files_invalid_file_extension():
+    # Arrange
+    files = [
+        "/fake/path/file1.mp3",
+        "/fake/path/file2.ogg",  # Invalid file extension
+        "/fake/path/file3.mp3",
+    ]
+    manager = TrackManager()
+
+    # Act & Assert
+    with pytest.raises(
+        ValueError,
+        match="Invalid file type for /fake/path/file2.ogg. Only MP3 files are allowed.",
+    ):
+        await manager.load_files(files)
