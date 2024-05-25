@@ -2,7 +2,7 @@ import pytest
 import httpx
 import respx
 import json
-from TrackManager import (
+from artist_resolver.trackmanager import (
     MbArtistDetails,
     TrackManager,
 )

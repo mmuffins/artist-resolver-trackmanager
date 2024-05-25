@@ -1,4 +1,4 @@
-from .TrackManager import (
+from artist_resolver.trackmanager import (
     Alias,
     MbArtistDetails,
     SimpleArtistDetails,
