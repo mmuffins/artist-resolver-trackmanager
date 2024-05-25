@@ -5,7 +5,7 @@ with open("requirements/common.txt") as f:
     requirements = f.read().splitlines()
 
 setup(
-    name="TrackManager",
+    name="artist_resolver_trackmanager",
     version="1.0",
     author="mmuffins",
     description="Python library for the artist resolver api",
