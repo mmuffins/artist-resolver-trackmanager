@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 # auto-generate package requirements from requirement file
-with open("requirements.txt") as f:
+with open("requirements/common.txt") as f:
     requirements = f.read().splitlines()
 
 setup(
