@@ -600,7 +600,6 @@ class TrackManager:
         Loads the provided list of MP3 files and reads their ID3 tags.
         Throws an exception if any file is not an MP3 file.
         """
-        self.clear_data()
         self.validate_files(files)
         for file in files:
             self.tracks.append(TrackDetails(file, self))
