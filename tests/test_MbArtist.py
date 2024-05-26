@@ -390,3 +390,61 @@ async def test_update_from_customization_sets_updated_from_server(respx_mock):
 
     # Assert
     assert artist.updated_from_server, "Expected artist.updated_from_server to be True"
+
+
+@pytest.mark.asyncio
+async def test_formatted_artist():
+    # Arrange
+    artist_person = MbArtistDetails(
+        name="Person Artist",
+        type="Person",
+        disambiguation="",
+        sort_name="Artist, Person",
+        aliases=[],
+        type_id="type-id-1",
+        joinphrase="",
+    )
+
+    artist_group = MbArtistDetails(
+        name="Group Artist",
+        type="Group",
+        disambiguation="",
+        sort_name="Artist, Group",
+        aliases=[],
+        type_id="type-id-2",
+        joinphrase="",
+    )
+
+    artist_character = MbArtistDetails(
+        name="Character Artist",
+        type="Character",
+        disambiguation="",
+        sort_name="Artist, Character",
+        aliases=[],
+        type_id="type-id-3",
+        joinphrase="",
+    )
+
+    # Act & Assert
+    assert (
+        artist_person.formatted_artist == "Artist, Person"
+    ), "Failed for 'Person' type"
+    assert artist_group.formatted_artist == "(Artist, Group)", "Failed for 'Group' type"
+    assert (
+        artist_character.formatted_artist == "(Artist, Character)"
+    ), "Failed for 'Character' type"
+
+    # Test with custom_name set
+    artist_person.custom_name = "Custom Person"
+    artist_group.custom_name = "Custom Group"
+    artist_character.custom_name = "Custom Character"
+
+    assert (
+        artist_person.formatted_artist == "Custom Person"
+    ), "Failed for 'Person' type with custom_name"
+    assert (
+        artist_group.formatted_artist == "(Custom Group)"
+    ), "Failed for 'Group' type with custom_name"
+    assert (
+        artist_character.formatted_artist == "(Custom Character)"
+    ), "Failed for 'Character' type with custom_name"

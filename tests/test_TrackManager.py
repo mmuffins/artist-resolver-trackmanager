@@ -494,38 +494,38 @@ async def test_formatted_new_artist():
     )
     artist.custom_name = "Custom Artist"
     assert (
-        artist.formatted_new_artist == "Custom Artist"
+        artist.formatted_artist == "Custom Artist"
     ), "Failed when custom_name is set"
 
     # Test case where custom_name is None
     artist.custom_name = None
     assert (
-        artist.formatted_new_artist == "Original Artist"
+        artist.formatted_artist == "Original Artist"
     ), "Failed when custom_name is None"
 
     # Test case where custom_name is empty
     artist.custom_name = ""
     assert (
-        artist.formatted_new_artist == "Original Artist"
+        artist.formatted_artist == "Original Artist"
     ), "Failed when custom_name is empty"
 
     # Test case where type is "character"
     artist.type = "character"
     artist.custom_name = "Custom Character"
     assert (
-        artist.formatted_new_artist == "(Custom Character)"
+        artist.formatted_artist == "(Custom Character)"
     ), "Failed when type is 'character'"
 
     # Test case where type is "group"
     artist.type = "group"
     artist.custom_name = "Custom Group"
     assert (
-        artist.formatted_new_artist == "(Custom Group)"
+        artist.formatted_artist == "(Custom Group)"
     ), "Failed when type is 'group'"
 
 
 @pytest.mark.asyncio
-async def test_formatted_new_artist():
+async def test_formatted_new_artist_multiple_artists():
     # Arrange
     manager = TrackManager()
     track = TrackDetails("/fake/path/file1.mp3", manager)
@@ -894,3 +894,31 @@ async def test_load_files_invalid_file_extension():
         match="Invalid file type for /fake/path/file2.ogg. Only MP3 files are allowed.",
     ):
         await manager.load_files(files)
+
+
+@pytest.mark.asyncio
+async def test_formatted_artist():
+    # Arrange
+    manager = TrackManager()
+    track = TrackDetails("/fake/path/file1.mp3", manager)
+    track.artist = ["Artist1", "Artist2"]
+
+    # Act
+    formatted_artist = track.formatted_artist
+
+    # Assert
+    assert (
+        formatted_artist == "Artist1; Artist2"
+    ), "Failed to concatenate artist names correctly"
+
+    # Test case with no artists
+    track.artist = []
+    formatted_artist = track.formatted_artist
+    assert formatted_artist == "", "Failed to handle empty artist list correctly"
+
+    # Test case with a single artist
+    track.artist = ["Single Artist"]
+    formatted_artist = track.formatted_artist
+    assert (
+        formatted_artist == "Single Artist"
+    ), "Failed to handle single artist correctly"

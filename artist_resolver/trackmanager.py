@@ -1,5 +1,4 @@
 import hashlib
-import os
 import re
 import json
 import httpx
@@ -101,11 +100,11 @@ class MbArtistDetails:
         Returns a formatted string representing the artist
         """
 
-        display_name = self.custom_name if self.custom_name else self.name
+        formatted_artist = self.custom_name if self.custom_name else self.name
         if self.type.lower() in ["character", "group"]:
-            return f"({display_name.strip('()')})"
+            return f"({formatted_artist.strip('()')})"
 
-        return display_name
+        return formatted_artist
 
     def update_from_customization(self, data: dict) -> None:
         """
