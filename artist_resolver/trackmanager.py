@@ -390,12 +390,12 @@ class TrackDetails:
         self.file_path: str = file_path
         self.manager: TrackManager = manager
         self.title: str = None
-        self.artist: List[str] = None
+        self.artist: List[str] = []
         self.album: str = None
         self.album_artist: str = None
         self.grouping: str = None
         self.original_album: str = None
-        self.original_artist: List[str] = None
+        self.original_artist: List[str] = []
         self.original_title: str = None
         self.product: str = None
         self.artist_relations = None
