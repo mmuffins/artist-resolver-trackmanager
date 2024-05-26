@@ -79,6 +79,7 @@ class MbArtistDetails:
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = name
         self.id: int = id
+        self.has_server_data: bool = False
         self.updated_from_server: bool = False
 
     def __str__(self):
@@ -101,11 +102,11 @@ class MbArtistDetails:
         Returns a formatted string representing the artist
         """
 
-        display_name = self.custom_name if self.custom_name else self.name
+        formatted_artist = self.custom_name if self.custom_name else self.name
         if self.type.lower() in ["character", "group"]:
-            return f"({display_name.strip('()')})"
+            return f"({formatted_artist.strip('()')})"
 
-        return display_name
+        return formatted_artist
 
     def update_from_customization(self, data: dict) -> None:
         """
@@ -116,7 +117,7 @@ class MbArtistDetails:
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = data["originalName"]
         self.id = data["id"]
-        self.updated_from_server = True
+        self.has_server_data = True
 
     @classmethod
     def from_dict(cls, data: dict, artist_list: list["MbArtistDetails"]):
@@ -256,7 +257,7 @@ class SimpleArtistDetails(MbArtistDetails):
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = data["name"]
         self.id = data["artistId"]
-        self.updated_from_server = True
+        self.has_server_data = True
 
     @staticmethod
     def split_artist_list(artist_list: list[str]) -> list[str]:
@@ -391,12 +392,12 @@ class TrackDetails:
         self.file_path: str = file_path
         self.manager: TrackManager = manager
         self.title: str = None
-        self.artist: List[str] = None
+        self.artist: List[str] = []
         self.album: str = None
         self.album_artist: str = None
         self.grouping: str = None
         self.original_album: str = None
-        self.original_artist: List[str] = None
+        self.original_artist: List[str] = []
         self.original_title: str = None
         self.product: str = None
         self.artist_relations = None
@@ -595,23 +596,37 @@ class TrackManager:
         # Remove track references from the track manager
         track.manager = None
 
-    async def load_directory(self, directory: str) -> None:
+    async def load_files(self, files: list[str]) -> None:
         """
-        Gets all mp3 files in a directory and reads their id3 tags
+        Loads the provided list of MP3 files and reads their ID3 tags.
+        Throws an exception if any file is not an MP3 file.
         """
-        self.directory = directory
-        self.get_mp3_files()
-        await self.read_file_metadata()
+        self.validate_files(files)
+        loaded_file_paths = {os.path.normpath(track.file_path) for track in self.tracks}
+        new_tracks = []
 
-    def get_mp3_files(self) -> None:
+        for file in files:
+            normalized_file = os.path.normpath(file)
+
+            if normalized_file in loaded_file_paths:
+                continue  # Skip loading if the file has already been loaded
+            new_track = TrackDetails(normalized_file, self)
+            self.tracks.append(new_track)
+            new_tracks.append(new_track)
+            loaded_file_paths.add(normalized_file)
+
+        await self.read_file_metadata(new_tracks)
+
+    def validate_files(self, files: list[str]) -> None:
         """
-        Recursively gets a list of all mp3 files in the provided folder
+        Validates if all the provided files are MP3 files.
+        Throws an exception if any file is not an MP3 file.
         """
-        for root, dirs, files in os.walk(self.directory):
-            for file in files:
-                if file.endswith(".mp3"):
-                    file_path = os.path.join(root, file)
-                    self.tracks.append(TrackDetails(file_path, self))
+        for file in files:
+            if not file.endswith(".mp3"):
+                raise ValueError(
+                    f"Invalid file type for {file}. Only MP3 files are allowed."
+                )
 
     async def save_files(self) -> None:
         """
@@ -632,11 +647,11 @@ class TrackManager:
             )
         )
 
-    async def read_file_metadata(self) -> None:
+    async def read_file_metadata(self, tracks: list[TrackDetails]) -> None:
         """
-        Reads ID3 tags for all files in the local tracks list
+        Reads ID3 tags for the provided list of tracks.
         """
-        await asyncio.gather(*(track.read_file_metadata() for track in self.tracks))
+        await asyncio.gather(*(track.read_file_metadata() for track in tracks))
 
     async def update_artists_info_from_db(self) -> None:
         """
@@ -645,6 +660,9 @@ class TrackManager:
         """
 
         for artist in self.artist_data.values():
+            if artist.updated_from_server:
+                continue
+
             if isinstance(artist, SimpleArtistDetails):
                 await self.update_simple_artist_from_db(artist)
             else:
@@ -656,6 +674,9 @@ class TrackManager:
         """
 
         alias = await self.get_simple_artist_alias(artist.name, artist.product_id)
+        # No matter if there was any information available, the artist should be marked
+        # as updated from server to prevent duplicate checks
+        artist.updated_from_server = True
         if alias:
             artist.update_from_simple_artist_dict(alias[0])
 
@@ -665,6 +686,8 @@ class TrackManager:
         """
 
         mb_artist_details = await self.get_mbartist(artist.mbid)
+        artist.updated_from_server = True
+
         if mb_artist_details:
             artist.update_from_customization(mb_artist_details)
 

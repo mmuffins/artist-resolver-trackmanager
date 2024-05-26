@@ -1,4 +1,5 @@
 import os
+import sys
 import pytest
 import httpx
 import respx
@@ -120,41 +121,6 @@ def create_mock_trackdetails():
     track.artist_relations = ["test artist_relations"]
 
     return track
-
-
-@pytest.mark.asyncio
-async def test_trackmanager_load_directory(mocker):
-    # Arrange
-    test_directory = "/fake/directory"
-    mocker.patch(
-        "os.walk",
-        return_value=[
-            (f"{test_directory}/dir1/subdir1", (), ("file1.mp3",)),
-            (f"{test_directory}/dir2", ("subdir",), []),
-            (f"{test_directory}/dir3", (), ["file1.ogg", "file2.txt"]),
-            (f"{test_directory}/dir4", ("subdir",), ["file1.mp3", "file2.mp3"]),
-        ],
-    )
-
-    manager = TrackManager()
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
-
-    # Act
-    await manager.load_directory("/fake/directory")
-
-    # Assert
-    manager.read_file_metadata.assert_awaited_once()
-    assert len(manager.tracks) == 3
-    assert os.path.normpath(manager.tracks[0].file_path) == os.path.normpath(
-        "/fake/directory/dir1/subdir1/file1.mp3"
-    )
-    assert os.path.normpath(manager.tracks[1].file_path) == os.path.normpath(
-        "/fake/directory/dir4/file1.mp3"
-    )
-    assert os.path.normpath(manager.tracks[2].file_path) == os.path.normpath(
-        "/fake/directory/dir4/file2.mp3"
-    )
 
 
 @pytest.mark.asyncio
@@ -515,52 +481,7 @@ async def test_save_file_metadata_partial_changes(mock_id3_tags):
 
 
 @pytest.mark.asyncio
-async def test_formatted_new_artist():
-    # Test case where custom_name is not None or empty
-    artist = MbArtistDetails(
-        name="Original Artist",
-        type="Person",
-        disambiguation="",
-        sort_name="Original Artist",
-        id="mock-id-1",
-        aliases=[],
-        type_id="type-id-1",
-        joinphrase="",
-    )
-    artist.custom_name = "Custom Artist"
-    assert (
-        artist.formatted_new_artist == "Custom Artist"
-    ), "Failed when custom_name is set"
-
-    # Test case where custom_name is None
-    artist.custom_name = None
-    assert (
-        artist.formatted_new_artist == "Original Artist"
-    ), "Failed when custom_name is None"
-
-    # Test case where custom_name is empty
-    artist.custom_name = ""
-    assert (
-        artist.formatted_new_artist == "Original Artist"
-    ), "Failed when custom_name is empty"
-
-    # Test case where type is "character"
-    artist.type = "character"
-    artist.custom_name = "Custom Character"
-    assert (
-        artist.formatted_new_artist == "(Custom Character)"
-    ), "Failed when type is 'character'"
-
-    # Test case where type is "group"
-    artist.type = "group"
-    artist.custom_name = "Custom Group"
-    assert (
-        artist.formatted_new_artist == "(Custom Group)"
-    ), "Failed when type is 'group'"
-
-
-@pytest.mark.asyncio
-async def test_formatted_new_artist():
+async def test_formatted_new_artist_multiple_artists():
     # Arrange
     manager = TrackManager()
     track = TrackDetails("/fake/path/file1.mp3", manager)
@@ -890,3 +811,144 @@ async def test_remove_track_no_remaining_references():
     assert len(manager.tracks) == 0
     assert track2 not in manager.tracks
     assert "mock-artist1-id" not in manager.artist_data
+
+
+@pytest.mark.asyncio
+async def test_load_files_valid_files(mocker):
+    # Arrange
+    files = ["/fake/path/file1.mp3", "/fake/path/file2.mp3", "/fake/path/file3.mp3"]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(files)
+
+    # Assert
+    manager.read_file_metadata.assert_awaited_once()
+    assert len(manager.tracks) == len(files)
+    for i in range(len(files)):
+        assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
+            files[i]
+        )
+
+
+@pytest.mark.asyncio
+async def test_load_files_duplicate_files(mocker):
+    # Arrange
+    file1 = ["/fake/path/file1.mp3"]
+    file2 = ["/fake/path/file2.mp3"]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(file1)
+    await manager.load_files(file2)
+
+    # Assert
+    await manager.load_files(file1)
+
+    assert len(manager.tracks) == 2
+
+
+@pytest.mark.asyncio
+async def test_load_files_invalid_file_extension():
+    # Arrange
+    files = [
+        "/fake/path/file1.mp3",
+        "/fake/path/file2.ogg",  # Invalid file extension
+        "/fake/path/file3.mp3",
+    ]
+    manager = TrackManager()
+
+    # Act & Assert
+    with pytest.raises(
+        ValueError,
+        match="Invalid file type for /fake/path/file2.ogg. Only MP3 files are allowed.",
+    ):
+        await manager.load_files(files)
+
+
+@pytest.mark.skipif(
+    sys.platform != "win32", reason="Test is specific to windows file path handling"
+)
+@pytest.mark.asyncio
+async def test_load_files_with_path_normalization(mocker):
+    # this is mostly relevant for cross-os compatibility
+    # Arrange
+    files = [
+        os.path.normpath(
+            "C:/Users/email_000/Desktop/music/sample/recall/01. recall.mp3"
+        ),
+        os.path.normpath(
+            "C:\\Users\\email_000\\Desktop\\music\\sample\\recall\\01. recall.mp3"
+        ),
+    ]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(files)
+
+    # Assert
+    manager.read_file_metadata.assert_awaited_once()
+    assert len(manager.tracks) == 1
+    assert os.path.normpath(manager.tracks[0].file_path) == os.path.normpath(files[0])
+
+
+@pytest.mark.asyncio
+async def test_load_files_with_mixed_slashes(mocker):
+    # Arrange
+    files = [
+        "/fake/path/file1.mp3",
+        "\\fake\\path\\file2.mp3",
+        "C:/fake/path\\file3.mp3",
+    ]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(files)
+
+    # Assert
+    manager.read_file_metadata.assert_awaited_once()
+    assert len(manager.tracks) == len(files)
+    for i in range(len(files)):
+        assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
+            files[i]
+        )
+
+
+@pytest.mark.asyncio
+async def test_formatted_artist():
+    # Arrange
+    manager = TrackManager()
+    track = TrackDetails("/fake/path/file1.mp3", manager)
+    track.artist = ["Artist1", "Artist2"]
+
+    # Act
+    formatted_artist = track.formatted_artist
+
+    # Assert
+    assert (
+        formatted_artist == "Artist1; Artist2"
+    ), "Failed to concatenate artist names correctly"
+
+    # Test case with no artists
+    track.artist = []
+    formatted_artist = track.formatted_artist
+    assert formatted_artist == "", "Failed to handle empty artist list correctly"
+
+    # Test case with a single artist
+    track.artist = ["Single Artist"]
+    formatted_artist = track.formatted_artist
+    assert (
+        formatted_artist == "Single Artist"
+    ), "Failed to handle single artist correctly"

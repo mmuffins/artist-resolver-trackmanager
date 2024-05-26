@@ -935,7 +935,7 @@ async def test_alias_found_when_saving_points_to_wrong_artist(respx_mock):
 
 @pytest.mark.asyncio
 @respx.mock(assert_all_mocked=True)
-async def test_update_from_simple_artist_dict_sets_updated_from_server(respx_mock):
+async def test_update_from_simple_artist_dict_sets_has_server_data(respx_mock):
     # Arrange
     manager = TrackManager()
 
@@ -980,4 +980,4 @@ async def test_update_from_simple_artist_dict_sets_updated_from_server(respx_moc
     await manager.update_artists_info_from_db()
 
     # Assert
-    assert artist.updated_from_server, "Expected artist.updated_from_server to be True"
+    assert artist.has_server_data, "Expected artist.has_server_data to be True"
