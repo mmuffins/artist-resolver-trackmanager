@@ -670,6 +670,9 @@ class TrackManager:
         """
 
         alias = await self.get_simple_artist_alias(artist.name, artist.product_id)
+        # No matter if there was any information available, the artist should be marked
+        # as updated from server to prevent duplicate checks
+        artist.updated_from_server = True
         if alias:
             artist.update_from_simple_artist_dict(alias[0])
 
@@ -679,6 +682,8 @@ class TrackManager:
         """
 
         mb_artist_details = await self.get_mbartist(artist.mbid)
+        artist.updated_from_server = True
+
         if mb_artist_details:
             artist.update_from_customization(mb_artist_details)
 
