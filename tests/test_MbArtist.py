@@ -448,3 +448,44 @@ async def test_formatted_artist():
     assert (
         artist_character.formatted_artist == "(Custom Character)"
     ), "Failed for 'Character' type with custom_name"
+
+
+@pytest.mark.asyncio
+async def test_formatted_artist():
+    # Test case where custom_name is not None or empty
+    artist = MbArtistDetails(
+        name="Original Artist",
+        type="Person",
+        disambiguation="",
+        sort_name="Original Artist",
+        id="mock-id-1",
+        aliases=[],
+        type_id="type-id-1",
+        joinphrase="",
+    )
+    artist.custom_name = "Custom Artist"
+    assert artist.formatted_artist == "Custom Artist", "Failed when custom_name is set"
+
+    # Test case where custom_name is None
+    artist.custom_name = None
+    assert (
+        artist.formatted_artist == "Original Artist"
+    ), "Failed when custom_name is None"
+
+    # Test case where custom_name is empty
+    artist.custom_name = ""
+    assert (
+        artist.formatted_artist == "Original Artist"
+    ), "Failed when custom_name is empty"
+
+    # Test case where type is "character"
+    artist.type = "character"
+    artist.custom_name = "Custom Character"
+    assert (
+        artist.formatted_artist == "(Custom Character)"
+    ), "Failed when type is 'character'"
+
+    # Test case where type is "group"
+    artist.type = "group"
+    artist.custom_name = "Custom Group"
+    assert artist.formatted_artist == "(Custom Group)", "Failed when type is 'group'"
