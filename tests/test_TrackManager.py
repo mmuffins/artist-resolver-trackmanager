@@ -872,6 +872,52 @@ async def test_load_files_invalid_file_extension():
 
 
 @pytest.mark.asyncio
+async def test_load_files_with_path_normalization(mocker):
+    # Arrange
+    files = [
+        "C:/Users/email_000/Desktop/music/sample/recall\\01. recall.mp3",
+        "C:/Users/email_000/Desktop/music/sample/recall/01. recall.mp3",
+    ]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(files)
+
+    # Assert
+    manager.read_file_metadata.assert_awaited_once()
+    assert len(manager.tracks) == 1
+    assert os.path.normpath(manager.tracks[0].file_path) == os.path.normpath(files[0])
+
+
+@pytest.mark.asyncio
+async def test_load_files_with_mixed_slashes(mocker):
+    # Arrange
+    files = [
+        "/fake/path/file1.mp3",
+        "\\fake\\path\\file2.mp3",
+        "C:/fake/path\\file3.mp3",
+    ]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(files)
+
+    # Assert
+    manager.read_file_metadata.assert_awaited_once()
+    assert len(manager.tracks) == len(files)
+    for i in range(len(files)):
+        assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
+            files[i]
+        )
+
+
+@pytest.mark.asyncio
 async def test_formatted_artist():
     # Arrange
     manager = TrackManager()

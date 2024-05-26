@@ -613,6 +613,7 @@ class TrackManager:
             new_track = TrackDetails(normalized_file, self)
             self.tracks.append(new_track)
             new_tracks.append(new_track)
+            loaded_file_paths.add(normalized_file)
 
         await self.read_file_metadata(new_tracks)
 
