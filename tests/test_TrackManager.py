@@ -873,13 +873,16 @@ async def test_load_files_invalid_file_extension():
 
 @pytest.mark.asyncio
 async def test_load_files_with_path_normalization(mocker):
+    # this is mostly relevant for cross-os compatibility
     # Arrange
-    # this is mostly relevant for linux
     files = [
-        os.path.join("C:", "Users", "email_000", "Desktop", "music", "sample", "recall", "01. recall.mp3"),
-        os.path.join("C:", "Users", "email_000", "Desktop", "music", "sample", "recall", "01. recall.mp3").replace("/", "\\"),
+        os.path.normpath(
+            "C:/Users/email_000/Desktop/music/sample/recall/01. recall.mp3"
+        ),
+        os.path.normpath(
+            "C:\\Users\\email_000\\Desktop\\music\\sample\\recall\\01. recall.mp3"
+        ),
     ]
-
     manager = TrackManager()
 
     # Mock read_file_metadata to be an awaitable that does nothing
