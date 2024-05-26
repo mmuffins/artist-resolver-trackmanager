@@ -1,4 +1,5 @@
 import hashlib
+import os
 import re
 import json
 import httpx
@@ -601,13 +602,15 @@ class TrackManager:
         Throws an exception if any file is not an MP3 file.
         """
         self.validate_files(files)
-        loaded_file_paths = {track.file_path for track in self.tracks}
+        loaded_file_paths = {os.path.normpath(track.file_path) for track in self.tracks}
         new_tracks = []
 
         for file in files:
-            if file in loaded_file_paths:
+            normalized_file = os.path.normpath(file)
+
+            if normalized_file in loaded_file_paths:
                 continue  # Skip loading if the file has already been loaded
-            new_track = TrackDetails(file, self)
+            new_track = TrackDetails(normalized_file, self)
             self.tracks.append(new_track)
             new_tracks.append(new_track)
 
