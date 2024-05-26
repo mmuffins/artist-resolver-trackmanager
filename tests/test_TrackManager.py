@@ -834,6 +834,26 @@ async def test_load_files_valid_files(mocker):
 
 
 @pytest.mark.asyncio
+async def test_load_files_duplicate_files(mocker):
+    # Arrange
+    file1 = ["/fake/path/file1.mp3"]
+    file2 = ["/fake/path/file2.mp3"]
+    manager = TrackManager()
+
+    # Mock read_file_metadata to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+
+    # Act
+    await manager.load_files(file1)
+    await manager.load_files(file2)
+
+    # Assert
+    await manager.load_files(file1)
+
+    assert len(manager.tracks) == 2
+
+
+@pytest.mark.asyncio
 async def test_load_files_invalid_file_extension():
     # Arrange
     files = [

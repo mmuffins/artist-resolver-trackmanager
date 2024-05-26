@@ -600,10 +600,17 @@ class TrackManager:
         Throws an exception if any file is not an MP3 file.
         """
         self.validate_files(files)
-        for file in files:
-            self.tracks.append(TrackDetails(file, self))
+        loaded_file_paths = {track.file_path for track in self.tracks}
+        new_tracks = []
 
-        await self.read_file_metadata()
+        for file in files:
+            if file in loaded_file_paths:
+                continue  # Skip loading if the file has already been loaded
+            new_track = TrackDetails(file, self)
+            self.tracks.append(new_track)
+            new_tracks.append(new_track)
+
+        await self.read_file_metadata(new_tracks)
 
     def validate_files(self, files: list[str]) -> None:
         """
@@ -635,11 +642,11 @@ class TrackManager:
             )
         )
 
-    async def read_file_metadata(self) -> None:
+    async def read_file_metadata(self, tracks: list[TrackDetails]) -> None:
         """
-        Reads ID3 tags for all files in the local tracks list
+        Reads ID3 tags for the provided list of tracks.
         """
-        await asyncio.gather(*(track.read_file_metadata() for track in self.tracks))
+        await asyncio.gather(*(track.read_file_metadata() for track in tracks))
 
     async def update_artists_info_from_db(self) -> None:
         """
