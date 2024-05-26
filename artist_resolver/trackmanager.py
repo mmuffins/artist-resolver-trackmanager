@@ -78,6 +78,7 @@ class MbArtistDetails:
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = name
         self.id: int = id
+        self.has_server_data: bool = False
         self.updated_from_server: bool = False
 
     def __str__(self):
@@ -115,7 +116,7 @@ class MbArtistDetails:
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = data["originalName"]
         self.id = data["id"]
-        self.updated_from_server = True
+        self.has_server_data = True
 
     @classmethod
     def from_dict(cls, data: dict, artist_list: list["MbArtistDetails"]):
@@ -255,7 +256,7 @@ class SimpleArtistDetails(MbArtistDetails):
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = data["name"]
         self.id = data["artistId"]
-        self.updated_from_server = True
+        self.has_server_data = True
 
     @staticmethod
     def split_artist_list(artist_list: list[str]) -> list[str]:
@@ -655,6 +656,9 @@ class TrackManager:
         """
 
         for artist in self.artist_data.values():
+            if artist.updated_from_server:
+                continue
+
             if isinstance(artist, SimpleArtistDetails):
                 await self.update_simple_artist_from_db(artist)
             else:

@@ -349,7 +349,7 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
 
 @pytest.mark.asyncio
 @respx.mock(assert_all_mocked=True)
-async def test_update_from_customization_sets_updated_from_server(respx_mock):
+async def test_update_from_customization_sets_has_server_data(respx_mock):
     # Arrange
     manager = TrackManager()
 
@@ -389,7 +389,7 @@ async def test_update_from_customization_sets_updated_from_server(respx_mock):
     await manager.update_artists_info_from_db()
 
     # Assert
-    assert artist.updated_from_server, "Expected artist.updated_from_server to be True"
+    assert artist.has_server_data, "Expected artist.has_server_data to be True"
 
 
 @pytest.mark.asyncio
