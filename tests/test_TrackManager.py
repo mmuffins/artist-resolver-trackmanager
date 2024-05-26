@@ -1,4 +1,5 @@
 import os
+import sys
 import pytest
 import httpx
 import respx
@@ -871,6 +872,9 @@ async def test_load_files_invalid_file_extension():
         await manager.load_files(files)
 
 
+@pytest.mark.skipif(
+    sys.platform != "win32", reason="Test is specific to windows file path handling"
+)
 @pytest.mark.asyncio
 async def test_load_files_with_path_normalization(mocker):
     # this is mostly relevant for cross-os compatibility
