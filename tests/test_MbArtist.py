@@ -650,21 +650,21 @@ async def test_parse_artist_json_with_nested_objects():
         # The weird text formatting is needed here because black formatter threw a fit over it
         assert actual_artist.mbid == expected_artist["id"], (
             f"MBID mismatch at index {i}: expected "
-            + {expected_artist["id"]}
+            + expected_artist["id"]
             + f", got {actual_artist.mbid}"
         )
         assert actual_artist.name == expected_artist["name"], (
             f"name mismatch at index {i}: expected "
-            + {expected_artist["name"]}
+            + expected_artist["name"]
             + f", got {actual_artist.name}"
         )
         assert actual_artist.sort_name == expected_artist["sort_name"], (
             f"sort_name mismatch at index {i}: expected "
-            + {expected_artist["sort_name"]}
+            + expected_artist["sort_name"]
             + f", got {actual_artist.sort_name}"
         )
         assert actual_artist.type == expected_artist["type"], (
             f"type mismatch at index {i}: expected "
-            + {expected_artist["type"]}
+            + expected_artist["type"]
             + f", got {actual_artist.type}"
         )
