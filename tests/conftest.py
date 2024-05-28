@@ -14,7 +14,8 @@ def mock_id3_instance(mocker):
     mocked_id3.return_value = mock_id3_instance
     # Mock the main get_id3_object call to get a dummy object
     mocker.patch(
-        "artist_resolver.trackmanager.TrackDetails.get_id3_object", return_value=mock_id3_instance
+        "artist_resolver.trackmanager.TrackDetails.get_id3_object",
+        return_value=mock_id3_instance,
     )
     return mock_id3_instance
 
