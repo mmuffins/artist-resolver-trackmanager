@@ -144,6 +144,15 @@ class MbArtistDetails:
         if not any(a.mbid == artist.mbid for a in artist_list):
             artist_list.append(artist)
 
+        # Reorder nested artists if needed
+        relations = data.get("relations", [])
+        for i in range(len(relations) - 1):
+            if (
+                relations[i]["type"].lower() == "character"
+                and relations[i + 1]["type"].lower() == "person"
+            ):
+                relations[i], relations[i + 1] = relations[i + 1], relations[i]
+
         # Flatten nested artists
         for relation in data.get("relations", []):
             cls.from_dict(relation, artist_list)
@@ -170,7 +179,7 @@ class MbArtistDetails:
         """
         Reorders the artist list based on the joinphrase property.
         """
-        # swap elements if they follow pattern 'Artist 1 (CV. Artist2)' 
+        # swap elements if they follow pattern 'Artist 1 (CV. Artist2)'
         cv_pattern = re.compile(r"^\(cv[:.\s]", re.IGNORECASE)
         for i in range(len(artist_list) - 1):
             if cv_pattern.match(artist_list[i].joinphrase) and artist_list[
