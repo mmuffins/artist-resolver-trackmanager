@@ -620,8 +620,8 @@ async def test_parse_artist_json_with_nested_objects():
 
     # the json object will be deduplicated and flattened, which is why it looks different from the expected list
     expected = [
-        expected_character1,
         expected_person1,
+        expected_character1,
         expected_person2,
         expected_character2,
         expected_person3,

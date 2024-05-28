@@ -159,6 +159,24 @@ class MbArtistDetails:
         for item in data:
             MbArtistDetails.from_dict(item, artist_list)
 
+        artist_list = MbArtistDetails.reorder_json_artists(artist_list)
+
+        return artist_list
+
+    @staticmethod
+    def reorder_json_artists(
+        artist_list: list["MbArtistDetails"],
+    ) -> list["MbArtistDetails"]:
+        """
+        Reorders the artist list based on the joinphrase property.
+        """
+        # swap elements if they follow pattern 'Artist 1 (CV. Artist2)' 
+        cv_pattern = re.compile(r"^\(cv[:.\s]", re.IGNORECASE)
+        for i in range(len(artist_list) - 1):
+            if cv_pattern.match(artist_list[i].joinphrase) and artist_list[
+                i + 1
+            ].joinphrase.startswith(")"):
+                artist_list[i], artist_list[i + 1] = artist_list[i + 1], artist_list[i]
         return artist_list
 
 
