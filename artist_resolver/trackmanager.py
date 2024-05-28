@@ -144,19 +144,6 @@ class MbArtistDetails:
         if not any(a.mbid == artist.mbid for a in artist_list):
             artist_list.append(artist)
 
-        # Reorder nested artists if needed
-        relations = data.get("relations", [])
-        for i in range(len(relations) - 1):
-            if (
-                relations[i]["type"].lower() == "character"
-                and relations[i + 1]["type"].lower() == "person"
-            ):
-                relations[i], relations[i + 1] = relations[i + 1], relations[i]
-
-        # Flatten nested artists
-        for relation in data.get("relations", []):
-            cls.from_dict(relation, artist_list)
-
     @staticmethod
     def parse_json(json_str: str) -> list["MbArtistDetails"]:
         """
@@ -164,29 +151,79 @@ class MbArtistDetails:
         """
 
         data = json.loads(json_str)
+        reordered_data = MbArtistDetails.reorder_json_artists(data)
+        preprocessed_data = MbArtistDetails.flatten_artist_json(reordered_data)
         artist_list: list[MbArtistDetails] = []
-        for item in data:
+        for item in preprocessed_data:
             MbArtistDetails.from_dict(item, artist_list)
-
-        artist_list = MbArtistDetails.reorder_json_artists(artist_list)
+            pass
 
         return artist_list
 
     @staticmethod
-    def reorder_json_artists(
-        artist_list: list["MbArtistDetails"],
-    ) -> list["MbArtistDetails"]:
+    def flatten_artist_json(data: list[dict]) -> list[dict]:
+        """
+        Preprocess the artist JSON data to reorder top-level elements and handle nested relations.
+        """
+
+        def flatten_relations(item: dict, parent_type: str = None) -> list[dict]:
+            flat_list = []
+            item["parent_type"] = parent_type
+            flat_list.append(item)
+            for relation in item.get("relations", []):
+                flat_list.extend(flatten_relations(relation, item["type"]))
+            item["relations"] = []  # Clear the relations as they are now flattened
+            return flat_list
+
+        combined_flat_list = []
+        for item in data:
+            flat_list = flatten_relations(item)
+            # Process the flat list to reorder based on type
+            for i in range(len(flat_list) - 1, 0, -1):
+                if (
+                    flat_list[i]["type"].lower() == "person"
+                    and flat_list[i - 1]["type"].lower() == "character"
+                ):
+                    flat_list[i], flat_list[i - 1] = flat_list[i - 1], flat_list[i]
+            combined_flat_list.extend(flat_list)
+
+        # nested relations can occur multiple times and need to be reversed,
+        # but the overall top-level order also has to be kept intact,
+        # so reversing and filtering twice is the easiest way to go
+        combined_flat_list.reverse()
+
+        reversed_list = []
+        for artist in combined_flat_list:
+            if not any(artist["id"] == a["id"] for a in reversed_list):
+                reversed_list.append(artist)
+
+        reversed_list.reverse()
+        filtered_list = []
+        for artist in reversed_list:
+            if not any(artist["id"] == a["id"] for a in filtered_list):
+                filtered_list.append(artist)
+
+        return filtered_list
+
+    @staticmethod
+    def reorder_json_artists(data: list[dict]) -> list[dict]:
         """
         Reorders the artist list based on the joinphrase property.
         """
+        reordered_data = []
+        reordered_data.extend(data)
+
         # swap elements if they follow pattern 'Artist 1 (CV. Artist2)'
         cv_pattern = re.compile(r"^\(cv[:.\s]", re.IGNORECASE)
-        for i in range(len(artist_list) - 1):
-            if cv_pattern.match(artist_list[i].joinphrase) and artist_list[
+        for i in range(len(data) - 1):
+            if cv_pattern.match(reordered_data[i]["joinphrase"]) and reordered_data[
                 i + 1
-            ].joinphrase.startswith(")"):
-                artist_list[i], artist_list[i + 1] = artist_list[i + 1], artist_list[i]
-        return artist_list
+            ]["joinphrase"].startswith(")"):
+                reordered_data[i], reordered_data[i + 1] = (
+                    reordered_data[i + 1],
+                    reordered_data[i],
+                )
+        return reordered_data
 
 
 class SimpleArtistDetails(MbArtistDetails):

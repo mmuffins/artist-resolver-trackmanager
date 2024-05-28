@@ -533,26 +533,201 @@ async def test_create_track_file_with_artist_json(mock_id3_tags):
 async def test_parse_artist_json_with_nested_objects():
     # Arrange
 
-    expected_person3 = {
-        "name": "Person3 Lastname",
-        "type": "Person",
-        "disambiguation": "",
-        "sort_name": "Lastname, Person3",
-        "id": "mock-12da-42b2-9fae-3c93b9a3bcdb",
+    input_object = [
+        {
+            "name": "Character1 Lastname",
+            "type": "Character",
+            "disambiguation": "Mock Franchise1",
+            "sort_name": "Lastname, Character1",
+            "id": "mock-e7a3-42ac-a08c-3aa896f87bd5",
+            "aliases": [],
+            "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+            "relations": [
+                {
+                    "name": "Person1 Lastname",
+                    "type": "Person",
+                    "disambiguation": "",
+                    "sort_name": "Lastname, Person1",
+                    "id": "mock-d84a-4523-b45c-de3348e968fd",
+                    "aliases": [
+                        {
+                            "locale": "en",
+                            "name": "Person1AliasEn Lastname",
+                            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                            "begin": "null",
+                            "primary": "true",
+                            "end": "null",
+                            "sort-name": "Lastname, Person1AliasEn",
+                            "ended": "false",
+                            "type": "Artist name",
+                        },
+                        {
+                            "end": "null",
+                            "locale": "ja",
+                            "name": "Person1AliasJa Lastname",
+                            "type-id": "mock-d8f4-4ea6-85a2-cf649203489b",
+                            "begin": "null",
+                            "primary": "true",
+                            "sort-name": "Lastname, Person1AliasJa",
+                            "ended": "false",
+                            "type": "Artist name",
+                        },
+                    ],
+                    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                    "relations": [
+                        {
+                            "name": "Person2 Lastname",
+                            "type": "Person",
+                            "disambiguation": "voice actor",
+                            "sort_name": "Lastname, Person2",
+                            "id": "mock-d2be-4617-955c-1d0710d03db5",
+                            "aliases": [],
+                            "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                            "relations": [],
+                        }
+                    ],
+                    "joinphrase": "",
+                }
+            ],
+            "joinphrase": "(CV.",
+        },
+        {
+            "name": "Person1 Lastname",
+            "type": "Person",
+            "disambiguation": "",
+            "sort_name": "Lastname, Person1",
+            "id": "mock-d84a-4523-b45c-de3348e968fd",
+            "aliases": [
+                {
+                    "locale": "en",
+                    "name": "Person1AliasEn Lastname",
+                    "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                    "begin": "null",
+                    "primary": "true",
+                    "end": "null",
+                    "sort-name": "Lastname, Person1AliasEn",
+                    "ended": "false",
+                    "type": "Artist name",
+                },
+                {
+                    "end": "null",
+                    "locale": "ja",
+                    "name": "Person1AliasJa Lastname",
+                    "type-id": "mock-d8f4-4ea6-85a2-cf649203489b",
+                    "begin": "null",
+                    "primary": "true",
+                    "sort-name": "Lastname, Person1AliasJa",
+                    "ended": "false",
+                    "type": "Artist name",
+                },
+            ],
+            "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "relations": [
+                {
+                    "name": "Person2 Lastname",
+                    "type": "Person",
+                    "disambiguation": "voice actor",
+                    "sort_name": "Lastname, Person2",
+                    "id": "mock-d2be-4617-955c-1d0710d03db5",
+                    "aliases": [],
+                    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                    "relations": [],
+                }
+            ],
+            "joinphrase": ")、",
+        },
+        {
+            "name": "Character2 Lastname",
+            "type": "Character",
+            "disambiguation": "Mock Franchise2",
+            "sort_name": "Lastname, Character2",
+            "id": "mock-3e63-42a5-8251-4dbe07ebc9e2",
+            "aliases": [],
+            "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+            "relations": [
+                {
+                    "name": "Person3 Lastname",
+                    "type": "Person",
+                    "disambiguation": "",
+                    "sort_name": "Lastname, Person3",
+                    "id": "mock-12da-42b2-9fae-3c93b9a3bcdb",
+                    "aliases": [],
+                    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                    "relations": [],
+                }
+            ],
+            "joinphrase": "(CV.",
+        },
+        {
+            "name": "Person3 Lastname",
+            "type": "Person",
+            "disambiguation": "",
+            "sort_name": "Lastname, Person3",
+            "id": "mock-12da-42b2-9fae-3c93b9a3bcdb",
+            "aliases": [],
+            "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+            "relations": [],
+            "joinphrase": ")",
+        },
+    ]
+
+    expected_character1 = {
+        "name": "Character1 Lastname",
+        "type": "Character",
+        "disambiguation": "Mock Franchise1",
+        "sort_name": "Lastname, Character1",
+        "id": "mock-e7a3-42ac-a08c-3aa896f87bd5",
         "aliases": [],
-        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
-        "relations": [],
+        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+        "relations": [
+            {
+                "name": "Person1 Lastname",
+                "type": "Person",
+                "disambiguation": "",
+                "sort_name": "Lastname, Person1",
+                "id": "mock-d84a-4523-b45c-de3348e968fd",
+                "aliases": [
+                    {
+                        "locale": "en",
+                        "name": "Person1AliasEn Lastname",
+                        "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+                        "begin": "null",
+                        "primary": "true",
+                        "end": "null",
+                        "sort-name": "Lastname, Person1AliasEn",
+                        "ended": "false",
+                        "type": "Artist name",
+                    },
+                    {
+                        "end": "null",
+                        "locale": "ja",
+                        "name": "Person1AliasJa Lastname",
+                        "type-id": "mock-d8f4-4ea6-85a2-cf649203489b",
+                        "begin": "null",
+                        "primary": "true",
+                        "sort-name": "Lastname, Person1AliasJa",
+                        "ended": "false",
+                        "type": "Artist name",
+                    },
+                ],
+                "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "relations": [],
+                "joinphrase": "",
+            }
+        ],
+        "joinphrase": "(CV.",
     }
 
-    expected_person2 = {
-        "name": "Person2 Lastname",
-        "type": "Person",
-        "disambiguation": "voice actor",
-        "sort_name": "Lastname, Person2",
-        "id": "mock-d2be-4617-955c-1d0710d03db5",
+    expected_character2 = {
+        "name": "Character2 Lastname",
+        "type": "Character",
+        "disambiguation": "Mock Franchise2",
+        "sort_name": "Lastname, Character2",
+        "id": "mock-3e63-42a5-8251-4dbe07ebc9e2",
         "aliases": [],
-        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
         "relations": [],
+        "joinphrase": "(CV.",
     }
 
     expected_person1 = {
@@ -590,41 +765,36 @@ async def test_parse_artist_json_with_nested_objects():
         "joinphrase": ")、",
     }
 
-    expected_character2 = {
-        "name": "Character2 Lastname",
-        "type": "Character",
-        "disambiguation": "Mock Franchise2",
-        "sort_name": "Lastname, Character2",
-        "id": "mock-3e63-42a5-8251-4dbe07ebc9e2",
+    expected_person2 = {
+        "name": "Person2 Lastname",
+        "type": "Person",
+        "disambiguation": "voice actor",
+        "sort_name": "Lastname, Person2",
+        "id": "mock-d2be-4617-955c-1d0710d03db5",
         "aliases": [],
-        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
         "relations": [],
-        "joinphrase": "(CV.",
     }
 
-    expected_character1 = {
-        "name": "Character1 Lastname",
-        "type": "Character",
-        "disambiguation": "Mock Franchise1",
-        "sort_name": "Lastname, Character1",
-        "id": "mock-e7a3-42ac-a08c-3aa896f87bd5",
+    expected_person3 = {
+        "name": "Person3 Lastname",
+        "type": "Person",
+        "disambiguation": "",
+        "sort_name": "Lastname, Person3",
+        "id": "mock-12da-42b2-9fae-3c93b9a3bcdb",
         "aliases": [],
-        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
         "relations": [],
-        "joinphrase": "(CV.",
+        "joinphrase": ")",
     }
-
-    expected_character1["relations"] = [expected_person1]
-    expected_character2["relations"] = [expected_person3]
-    expected_person1["relations"] = [expected_person2]
 
     # the json object will be deduplicated and flattened, which is why it looks different from the expected list
     expected = [
         expected_person1,
         expected_character1,
         expected_person2,
-        expected_character2,
         expected_person3,
+        expected_character2,
     ]
 
     track = create_mock_trackdetails()
@@ -634,11 +804,15 @@ async def test_parse_artist_json_with_nested_objects():
         [expected_character1, expected_person1, expected_character2, expected_person3]
     )
 
+    track.artist_relations = json.dumps(input_object)
+
     # Act
     await track.create_artist_objects()
 
     # Assert
     assert len(manager.artist_data) == 5, f"Unexpected number of entries in artist_data"
+
+    # should be p1, c1, p2, p3, c2
 
     artists = track.mbArtistDetails
     assert len(artists) == len(
@@ -668,3 +842,147 @@ async def test_parse_artist_json_with_nested_objects():
             + expected_artist["type"]
             + f", got {actual_artist.type}"
         )
+
+
+@pytest.mark.asyncio
+async def test_reorder_json_artists():
+    # Arrange
+
+    character = {
+        "name": "Character1 Lastname",
+        "type": "Character",
+        "disambiguation": "Mock Franchise1",
+        "sort_name": "Lastname, Character1",
+        "id": "mock-e7a3-42ac-a08c-3aa896f87bd5",
+        "aliases": [],
+        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+        "relations": [],
+        "joinphrase": "(CV.",
+    }
+
+    person = {
+        "name": "Person1 Lastname",
+        "type": "Person",
+        "disambiguation": "",
+        "sort_name": "Lastname, Person1",
+        "id": "mock-d84a-4523-b45c-de3348e968fd",
+        "aliases": [],
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+        "relations": [],
+        "joinphrase": "), ",
+    }
+
+    artists = [character, person]
+
+    # Act
+    reordered_artists = MbArtistDetails.reorder_json_artists(artists)
+
+    # Assert
+    assert (
+        reordered_artists[0]["type"] == "Person"
+    ), "Expected Person to be first after reordering"
+    assert (
+        reordered_artists[1]["type"] == "Character"
+    ), "Expected Character to be second after reordering"
+
+
+@pytest.mark.asyncio
+async def test_reorder_nested_relations_in_from_dict():
+    # Arrange
+    json_str = json.dumps(
+        [
+            {
+                "name": "Group",
+                "type": "Group",
+                "disambiguation": "Disambig",
+                "sort_name": "Group",
+                "id": "group-id",
+                "aliases": [],
+                "type_id": "group-type-id",
+                "relations": [
+                    {
+                        "name": "Character",
+                        "type": "Character",
+                        "disambiguation": "",
+                        "sort_name": "Character",
+                        "id": "character-id",
+                        "aliases": [],
+                        "type_id": "character-type-id",
+                        "relations": [
+                            {
+                                "name": "Person",
+                                "type": "Person",
+                                "disambiguation": "",
+                                "sort_name": "Person",
+                                "id": "person-id",
+                                "aliases": [],
+                                "type_id": "person-type-id",
+                                "relations": [],
+                            }
+                        ],
+                        "joinphrase": "(CV.",
+                    }
+                ],
+                "joinphrase": "",
+            }
+        ]
+    )
+
+    # Act
+    artists = MbArtistDetails.parse_json(json_str)
+
+    # Assert
+    assert artists[0].name == "Group", "Expected first artist to be Group"
+    assert artists[1].name == "Person", "Expected second artist to be Person"
+    assert artists[2].name == "Character", "Expected third artist to be Character"
+
+
+@pytest.mark.asyncio
+async def test_reorder_complex_nested_relations_in_from_dict():
+    # Arrange
+    json_str = json.dumps(
+        [
+            {
+                "name": "Group",
+                "type": "Group",
+                "disambiguation": "Disambig",
+                "sort_name": "Group",
+                "id": "group-id",
+                "aliases": [],
+                "type_id": "group-type-id",
+                "relations": [
+                    {
+                        "name": "Character",
+                        "type": "Character",
+                        "disambiguation": "",
+                        "sort_name": "Character",
+                        "id": "character-id",
+                        "aliases": [],
+                        "type_id": "character-type-id",
+                        "relations": [
+                            {
+                                "name": "Person",
+                                "type": "Person",
+                                "disambiguation": "",
+                                "sort_name": "Person",
+                                "id": "person-id",
+                                "aliases": [],
+                                "type_id": "person-type-id",
+                                "relations": [],
+                            }
+                        ],
+                        "joinphrase": "(CV.",
+                    }
+                ],
+                "joinphrase": "",
+            }
+        ]
+    )
+
+    # Act
+    artists = MbArtistDetails.parse_json(json_str)
+
+    # Assert
+    assert artists[0].name == "Group", "Expected first artist to be Group"
+    assert artists[1].name == "Person", "Expected second artist to be Person"
+    assert artists[2].name == "Character", "Expected third artist to be Character"
