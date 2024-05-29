@@ -800,10 +800,6 @@ async def test_parse_artist_json_with_nested_objects():
     track = create_mock_trackdetails()
     manager = track.manager
 
-    track.artist_relations = json.dumps(
-        [expected_character1, expected_person1, expected_character2, expected_person3]
-    )
-
     track.artist_relations = json.dumps(input_object)
 
     # Act
@@ -811,6 +807,196 @@ async def test_parse_artist_json_with_nested_objects():
 
     # Assert
     assert len(manager.artist_data) == 5, f"Unexpected number of entries in artist_data"
+
+    # should be p1, c1, p2, p3, c2
+
+    artists = track.mbArtistDetails
+    assert len(artists) == len(
+        expected
+    ), f"Expected {len(expected)} artists, got {len(artists)}"
+    for i in range(len(expected)):
+        expected_artist = expected[i]
+        actual_artist = artists[i]
+        # The weird text formatting is needed here because black formatter threw a fit over it
+        assert actual_artist.mbid == expected_artist["id"], (
+            f"MBID mismatch at index {i}: expected "
+            + expected_artist["id"]
+            + f", got {actual_artist.mbid}"
+        )
+        assert actual_artist.name == expected_artist["name"], (
+            f"name mismatch at index {i}: expected "
+            + expected_artist["name"]
+            + f", got {actual_artist.name}"
+        )
+        assert actual_artist.sort_name == expected_artist["sort_name"], (
+            f"sort_name mismatch at index {i}: expected "
+            + expected_artist["sort_name"]
+            + f", got {actual_artist.sort_name}"
+        )
+        assert actual_artist.type == expected_artist["type"], (
+            f"type mismatch at index {i}: expected "
+            + expected_artist["type"]
+            + f", got {actual_artist.type}"
+        )
+
+
+@pytest.mark.asyncio
+@respx.mock(assert_all_mocked=True)
+async def test_parse_artist_json_with_nested_objects2():
+    # Arrange
+
+    input_object = [
+        {
+            "name": "Group 1",
+            "type": "Group",
+            "disambiguation": "",
+            "sort_name": "Group 1",
+            "id": "mock-e7a3-4673-a08c-26a996f87bd5",
+            "aliases": [],
+            "type_id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+            "relations": [
+                {
+                    "name": "Character1 Lastname",
+                    "type": "Character",
+                    "disambiguation": "",
+                    "sort_name": "Lastname, Character1",
+                    "id": "mock-0abd-4673-aa68-87b1fa70047c",
+                    "aliases": [],
+                    "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+                    "relations": [
+                        {
+                            "name": "Person1 Lastname",
+                            "type": "Person",
+                            "disambiguation": "voice actor",
+                            "sort_name": "Lastname, Person1",
+                            "id": "mock-6193-496e-8e10-8a38960cc8ed",
+                            "aliases": [],
+                            "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                            "relations": [],
+                        }
+                    ],
+                },
+                {
+                    "name": "Character2 Lastname",
+                    "type": "Character",
+                    "disambiguation": "",
+                    "sort_name": "Lastname, Character2",
+                    "id": "mock-6759-4648-b777-08d15f18dbbdd",
+                    "aliases": [],
+                    "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+                    "relations": [
+                        {
+                            "name": "Person2 Lastname",
+                            "type": "Person",
+                            "disambiguation": "voice actor",
+                            "sort_name": "Lastname, Person2",
+                            "id": "mock-2cb2-4080-9a3d-d327525a4e3a",
+                            "aliases": [],
+                            "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                            "relations": [],
+                        }
+                    ],
+                },
+                {
+                    "name": "Person2 Lastname",
+                    "type": "Person",
+                    "disambiguation": "voice actor",
+                    "sort_name": "Lastname, Person2",
+                    "id": "mock-2cb2-4080-9a3d-d327525a4e3a",
+                    "aliases": [],
+                    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                    "relations": [],
+                },
+                {
+                    "name": "Person1 Lastname",
+                    "type": "Person",
+                    "disambiguation": "voice actor",
+                    "sort_name": "Lastname, Person1",
+                    "id": "mock-6193-8e10-496e-8a38331cc8ed",
+                    "aliases": [],
+                    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                    "relations": [],
+                },
+            ],
+            "joinphrase": "",
+        }
+    ]
+
+    expected_group1 = {
+        "name": "Group 1",
+        "type": "Group",
+        "disambiguation": "",
+        "sort_name": "Group 1",
+        "id": "mock-e7a3-4673-a08c-26a996f87bd5",
+        "aliases": [],
+        "type_id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+        "relations": [],
+        "joinphrase": "",
+    }
+
+    expected_character1 = {
+        "name": "Character1 Lastname",
+        "type": "Character",
+        "disambiguation": "",
+        "sort_name": "Lastname, Character1",
+        "id": "mock-0abd-4673-aa68-87b1fa70047c",
+        "aliases": [],
+        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+        "relations": [],
+    }
+
+    expected_character2 = {
+        "name": "Character2 Lastname",
+        "type": "Character",
+        "disambiguation": "",
+        "sort_name": "Lastname, Character2",
+        "id": "mock-6759-4648-b777-08d15f18dbbdd",
+        "aliases": [],
+        "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
+        "relations": [],
+    }
+
+    expected_person1 = {
+        "name": "Person1 Lastname",
+        "type": "Person",
+        "disambiguation": "voice actor",
+        "sort_name": "Lastname, Person1",
+        "id": "mock-6193-496e-8e10-8a38960cc8ed",
+        "aliases": [],
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+        "relations": [],
+    }
+
+    expected_person2 = {
+        "name": "Person2 Lastname",
+        "type": "Person",
+        "disambiguation": "voice actor",
+        "sort_name": "Lastname, Person2",
+        "id": "mock-2cb2-4080-9a3d-d327525a4e3a",
+        "aliases": [],
+        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+        "relations": [],
+    }
+
+    # the json object will be deduplicated and flattened, which is why it looks different from the expected list
+    expected = [
+        expected_group1,
+        expected_person1,
+        expected_character1,
+        expected_person2,
+        expected_character2,
+    ]
+
+    track = create_mock_trackdetails()
+    manager = track.manager
+
+    track.artist_relations = json.dumps(input_object)
+
+    # Act
+    await track.create_artist_objects()
+
+    # Assert
+    assert len(manager.artist_data) == 6, f"Unexpected number of entries in artist_data"
 
     # should be p1, c1, p2, p3, c2
 
