@@ -75,7 +75,7 @@ class MbArtistDetails:
         self.aliases = aliases
         self.type_id = type_id
         self.joinphrase = joinphrase
-        self.custom_name = sort_name
+        self.custom_name = sort_name.replace(",", "")
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = name
         self.id: int = id
