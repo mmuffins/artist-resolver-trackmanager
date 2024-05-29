@@ -300,9 +300,11 @@ class MbArtistDetails:
         # swap elements if they follow pattern 'Artist 1 (CV. Artist2)'
         cv_pattern = re.compile(r"^\(cv[:.\s]", re.IGNORECASE)
         for i in range(len(data) - 1):
-            if cv_pattern.match(reordered_data[i]["joinphrase"]) and reordered_data[
-                i + 1
-            ]["joinphrase"].startswith(")"):
+            if (
+                hasattr(reordered_data[i], "joinphrase")
+                and cv_pattern.match(reordered_data[i]["joinphrase"])
+                and reordered_data[i + 1]["joinphrase"].startswith(")")
+            ):
                 reordered_data[i], reordered_data[i + 1] = (
                     reordered_data[i + 1],
                     reordered_data[i],
