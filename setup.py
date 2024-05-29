@@ -6,7 +6,7 @@ with open("requirements/common.txt") as f:
 
 setup(
     name="artist-resolver-trackmanager",
-    version="1.2.1",
+    version="1.2.2",
     author="mmuffins",
     description="Python library for the artist resolver api",
     url="https://github.com/mmuffins/artist-resolver-trackmanager",
