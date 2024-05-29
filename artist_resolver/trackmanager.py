@@ -151,10 +151,13 @@ class MbArtistDetails:
         """
 
         data = json.loads(json_str)
-        reordered_data = MbArtistDetails.reorder_json_artists(data)
-        preprocessed_data = MbArtistDetails.flatten_artist_json(reordered_data)
+        artist_relation_cache = MbArtistDetails.build_artist_relation_cache(
+            data, {}, None, None
+        )
+        sorted_data = MbArtistDetails.sort_artist_json(artist_relation_cache, None)
+        flattened_data = MbArtistDetails.flatten_artist_json(sorted_data)
         artist_list: list[MbArtistDetails] = []
-        for item in preprocessed_data:
+        for item in flattened_data:
             MbArtistDetails.from_dict(item, artist_list)
             pass
 
@@ -165,6 +168,19 @@ class MbArtistDetails:
         """
         Preprocess the artist JSON data to reorder top-level elements and handle nested relations.
         """
+
+        result = []
+
+        def recurse(artist):
+            result.append(artist)
+            if "relations" in artist and artist["relations"]:
+                for relation in artist["relations"]:
+                    recurse(relation)
+
+        for artist in data:
+            recurse(artist)
+
+        return result
 
         def flatten_relations(item: dict, parent_type: str = None) -> list[dict]:
             flat_list = []
@@ -179,34 +195,102 @@ class MbArtistDetails:
         for item in data:
             flat_list = flatten_relations(item)
             # Process the flat list to reorder based on type
-            for i in range(len(flat_list) - 1, 0, -1):
-                if (
-                    flat_list[i]["type"].lower() == "person"
-                    and flat_list[i - 1]["type"].lower() == "character"
-                ):
-                    flat_list[i], flat_list[i - 1] = flat_list[i - 1], flat_list[i]
+            # for i in range(len(flat_list) - 1, 0, -1):
+            #     if (
+            #         flat_list[i]["type"].lower() == "person"
+            #         and flat_list[i - 1]["type"].lower() == "character"
+            #     ):
+            #         flat_list[i], flat_list[i - 1] = flat_list[i - 1], flat_list[i]
             combined_flat_list.extend(flat_list)
 
         # nested relations can occur multiple times and need to be reversed,
         # but the overall top-level order also has to be kept intact,
         # so reversing and filtering twice is the easiest way to go
-        combined_flat_list.reverse()
+        # combined_flat_list.reverse()
 
-        reversed_list = []
-        for artist in combined_flat_list:
-            if not any(artist["id"] == a["id"] for a in reversed_list):
-                reversed_list.append(artist)
+        # reversed_list = []
+        # for artist in combined_flat_list:
+        #     if not any(artist["id"] == a["id"] for a in reversed_list):
+        #         reversed_list.append(artist)
 
-        reversed_list.reverse()
-        filtered_list = []
-        for artist in reversed_list:
-            if not any(artist["id"] == a["id"] for a in filtered_list):
-                filtered_list.append(artist)
+        # reversed_list.reverse()
+        # filtered_list = []
+        # for artist in reversed_list:
+        #     if not any(artist["id"] == a["id"] for a in filtered_list):
+        #         filtered_list.append(artist)
 
-        return filtered_list
+        # return filtered_list
 
     @staticmethod
-    def reorder_json_artists(data: list[dict]) -> list[dict]:
+    def sort_artist_json(artist_cache: dict, parent: str) -> list[dict]:
+        resolved_list = [
+            artist["definition"]
+            for artist in artist_cache.values()
+            if artist["parent"] is parent
+        ]
+
+        for artist in resolved_list:
+            artist["relations"] = []
+            artist["relations"] = MbArtistDetails.sort_artist_json(
+                artist_cache, artist["id"]
+            )
+
+        return resolved_list
+
+    @staticmethod
+    def build_artist_relation_cache(
+        data: list[dict],
+        artist_cache,
+        parent_id: str = None,
+        parent_type: str = None,
+    ) -> dict:
+        """
+        Reorders the artist list based on the joinphrase property.
+        """
+
+        reordered_data = MbArtistDetails.reorder_json_cv(data)
+
+        for artist in reordered_data:
+            if artist["id"] in artist_cache:
+                artist_entry = artist_cache[artist["id"]]
+            else:
+                artist_entry = {
+                    "type": artist["type"],
+                    "parent": parent_id,
+                    "parent_type": parent_type,
+                    "definition": artist,
+                }
+                artist_cache[artist["id"]] = artist_entry
+
+            if artist_entry["parent"] is None and parent_id is not None:
+                artist_entry["parent"] = parent_id
+                artist_entry["parent_type"] = parent_type
+
+            if (
+                artist_entry["type"].lower() == "person"
+                and artist_entry["parent_type"] is not None
+                and artist_entry["parent_type"].lower() == "character"
+            ):
+                old_parent = artist_cache[artist_entry["parent"]]
+                artist_entry["parent"] = old_parent["parent"]
+                old_parent["parent"] = artist["id"]
+
+                old_parent_type = old_parent["parent_type"]
+                old_parent["parent_type"] = artist_entry["type"]
+                artist_entry["parent_type"] = old_parent_type
+
+            if artist["relations"]:
+                MbArtistDetails.build_artist_relation_cache(
+                    artist["relations"],
+                    artist_cache,
+                    artist["id"],
+                    artist_entry["type"],
+                )
+
+        return artist_cache
+
+    @staticmethod
+    def reorder_json_cv(data: list[dict]) -> list[dict]:
         """
         Reorders the artist list based on the joinphrase property.
         """
