@@ -6,7 +6,7 @@ import respx
 from unittest.mock import AsyncMock, MagicMock, call
 from artist_resolver.trackmanager import TrackManager, MbArtistDetails, TrackDetails
 from mutagen import id3
-from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3
+from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3, TXXX
 
 
 def create_mock_trackdetails():
@@ -101,6 +101,7 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
     track.original_album = "Same Original Album"
     track.original_artist = ["Same Original Artist"]
     track.original_title = "Same Original Title"
+    track.artist_relations = "Same Artist Relations"
     track.id3 = id3.ID3(track.file_path)
 
     mock_id3_instance = mock_id3_tags(
@@ -113,7 +114,8 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
             "TOAL": TOAL(encoding=3, text="Same Original Album"),
             "TOPE": TOPE(encoding=3, text=["Same Original Artist"]),
             "TPE3": TPE3(encoding=3, text="Same Original Title"),
-        }
+        },
+        txxx_frames=[TXXX(encoding=3, HashKey="TXXX:artist_relations_json", desc="artist_relations_json", text="Same Artist Relations")]
     )
 
     # Act
@@ -121,6 +123,7 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
 
     # Assert
     mock_id3_instance.__setitem__.assert_not_called()
+    mock_id3_instance.delall.assert_not_called()
     mock_id3_instance.save.assert_not_called()
 
 

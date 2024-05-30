@@ -2,25 +2,12 @@ import pytest
 import httpx
 import respx
 import json
-from unittest.mock import MagicMock
+from mutagen.id3 import TXXX
 from artist_resolver.trackmanager import (
     MbArtistDetails,
     TrackDetails,
     TrackManager,
 )
-
-
-def create_mock_txxx(description, text):
-    """
-    Returns a mocked id3 frame
-    """
-
-    mock_txxx = MagicMock()
-    mock_txxx.FrameID = "TXXX"
-    mock_txxx.HashKey = f"TXXX:{description}"
-    mock_txxx.desc = description
-    mock_txxx.text = text
-    return mock_txxx
 
 
 def create_mock_trackdetails():
@@ -474,7 +461,9 @@ async def test_create_track_file_with_artist_json(mock_id3_tags):
     reference_track = create_mock_trackdetails()
     reference_track.product = None
 
-    mock_id3_instance = mock_id3_tags(
+    mbid = "mock-93fb-4bc3-8ff9-065c75c4f90a"
+
+    mock_id3_tags(
         {
             "TIT2": reference_track.title,
             "TPE1": reference_track.artist,
@@ -484,32 +473,32 @@ async def test_create_track_file_with_artist_json(mock_id3_tags):
             "TOAL": reference_track.original_album,
             "TOPE": reference_track.original_artist,
             "TPE3": reference_track.original_title,
-        }
-    )
-
-    mbid = "mock-93fb-4bc3-8ff9-065c75c4f90a"
-    # id3 call for id3.getall("TXXX")
-    mock_artist_relations = create_mock_txxx(
-        description="artist_relations_json",
-        text=[
-            json.dumps(
-                [
-                    {
-                        "name": "Firstname Lastname",
-                        "type": "Person",
-                        "disambiguation": "",
-                        "sort_name": "Lastname, Firstname",
-                        "id": mbid,
-                        "aliases": [],
-                        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
-                        "relations": [],
-                        "joinphrase": "",
-                    }
-                ]
+        },
+        txxx_frames=[
+            TXXX(
+                encoding=3,
+                HashKey="TXXX:artist_relations_json",
+                desc="artist_relations_json",
+                text=[
+                    json.dumps(
+                        [
+                            {
+                                "name": "Firstname Lastname",
+                                "type": "Person",
+                                "disambiguation": "",
+                                "sort_name": "Lastname, Firstname",
+                                "id": mbid,
+                                "aliases": [],
+                                "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                                "relations": [],
+                                "joinphrase": "",
+                            }
+                        ]
+                    )
+                ],
             )
         ],
     )
-    mock_id3_instance.getall.return_value = [mock_artist_relations]
 
     # Act
     manager = TrackManager()
