@@ -628,16 +628,8 @@ class TrackDetails:
             setattr(self, mapping["property"], value)
 
         # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
-        artist_relations_frame = next(
-            (
-                frame
-                for frame in self.id3.getall("TXXX")
-                if frame.desc == "artist_relations_json"
-            ),
-            None,
-        )
-        if artist_relations_frame:
-            self.artist_relations = artist_relations_frame.text[0]
+        txxx = self.id3.getall("TXXX:artist_relations_json")
+        self.artist_relations = txxx[0].text[0] if txxx else None
 
         await self.create_artist_objects()
 
@@ -682,7 +674,6 @@ class TrackDetails:
         """
         Writes changed id3 tags back to the filesystem
         """
-
         file_changed: bool = False
 
         for tag, mapping in self.tag_mappings.items():
@@ -700,6 +691,23 @@ class TrackDetails:
                     # the current property doesn't have a value, but the file doesn't
                     # pop is executed immediately, so file_changed doesn't need to be set
                     self.id3.pop(tag, None)
+
+        txxx = self.id3.getall("TXXX:artist_relations_json")
+        artist_relations_frame = txxx[0] if txxx else None
+
+        if self.artist_relations:
+            if artist_relations_frame:
+                if artist_relations_frame.text[0] != self.artist_relations:
+                    artist_relations_frame.text[0] = self.artist_relations
+                    file_changed = True
+            else:
+                new_frame = id3.TXXX(encoding=3, desc="artist_relations_json", text=self.artist_relations)
+                self.id3.add(new_frame)
+                file_changed = True
+        else:
+            if artist_relations_frame:
+                self.id3.delall("TXXX:artist_relations_json")
+                file_changed = True
 
         if file_changed:
             self.id3.save(self.file_path)
