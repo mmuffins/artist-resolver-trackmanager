@@ -328,7 +328,7 @@ async def test_formatted_new_artist_empty():
     # Arrange
     manager = TrackManager()
     track = TrackDetails("/fake/path/file2.mp3", manager)
-    track.mbArtistDetails = []
+    track.artist_details = []
 
     # Act
     concatenated_string = track.formatted_new_artist
@@ -505,9 +505,9 @@ async def test_remove_track():
     track2 = create_mock_trackdetails()
     track3 = create_mock_trackdetails()
 
-    track1.mbArtistDetails = [artist1]
-    track2.mbArtistDetails = [artist2]
-    track3.mbArtistDetails = [artist1, artist3]
+    track1.artist_details = [artist1]
+    track2.artist_details = [artist2]
+    track3.artist_details = [artist1, artist3]
 
     manager.tracks = [track1, track2, track3]
 
@@ -573,8 +573,8 @@ async def test_remove_track_no_remaining_references():
     track1 = create_mock_trackdetails()
     track2 = create_mock_trackdetails()
 
-    track1.mbArtistDetails = [artist1, artist2]
-    track2.mbArtistDetails = [artist1]
+    track1.artist_details = [artist1, artist2]
+    track2.artist_details = [artist1]
 
     manager.tracks = [track1, track2]
 
