@@ -115,7 +115,14 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
             "TOPE": TOPE(encoding=3, text=["Same Original Artist"]),
             "TPE3": TPE3(encoding=3, text="Same Original Title"),
         },
-        txxx_frames=[TXXX(encoding=3, HashKey="TXXX:artist_relations_json", desc="artist_relations_json", text="Same Artist Relations")]
+        txxx_frames=[
+            TXXX(
+                encoding=3,
+                HashKey="TXXX:artist_relations_json",
+                desc="artist_relations_json",
+                text="Same Artist Relations",
+            )
+        ],
     )
 
     # Act

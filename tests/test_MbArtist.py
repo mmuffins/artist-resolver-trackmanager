@@ -1235,8 +1235,10 @@ async def test_reorder_nested_relations_in_from_dict2():
 
 
 @pytest.mark.asyncio
+@respx.mock(assert_all_mocked=True)
 async def test_read_file_metadata_read_artist_json_true_creates_simple_artist(
     mock_id3_tags,
+    respx_mock
 ):
     # Arrange
     reference_track = create_mock_trackdetails()
@@ -1279,12 +1281,27 @@ async def test_read_file_metadata_read_artist_json_true_creates_simple_artist(
         ],
     )
 
+    simpleartist_manager = TrackManager()
+
+    respx_mock.route(
+        method="GET",
+        port__in=[simpleartist_manager.api_port],
+        host=simpleartist_manager.api_host,
+        path="/api/franchise",
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json=[
+                {"id": 1, "name": "_", "aliases": []},
+            ],
+        )
+    )
+
     # Act
     mbartist_manager = TrackManager()
     mbartist_track = TrackDetails("/fake/path/file1.mp3", mbartist_manager)
     await mbartist_track.read_file_metadata(read_artist_json=True)
 
-    simpleartist_manager = TrackManager()
     simpleartist_track = TrackDetails("/fake/path/file1.mp3", simpleartist_manager)
     await simpleartist_track.read_file_metadata(read_artist_json=False)
 
