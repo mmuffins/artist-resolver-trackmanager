@@ -267,8 +267,9 @@ class MbArtistDetails:
                 artist_entry["parent_type"] = parent_type
 
             if (
-                artist_entry["type"].lower() == "person"
-                and artist_entry["parent_type"] is not None
+                artist_entry["type"]
+                and artist_entry["type"].lower() == "person"
+                and artist_entry["parent_type"]
                 and artist_entry["parent_type"].lower() == "character"
             ):
                 old_parent = artist_cache[artist_entry["parent"]]
