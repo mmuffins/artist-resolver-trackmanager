@@ -556,7 +556,7 @@ class TrackDetails:
         self.product: str = None
         self.artist_relations = None
         self.update_file: bool = True
-        self.mbArtistDetails: List[MbArtistDetails] = []
+        self.artist_details: List[MbArtistDetails] = []
 
     def __str__(self):
         return f"{self.title}"
@@ -588,7 +588,7 @@ class TrackDetails:
 
         return [
             artist.formatted_artist
-            for artist in self.mbArtistDetails
+            for artist in self.artist_details
             if artist.include is True
         ]
 
@@ -640,11 +640,11 @@ class TrackDetails:
         """
 
         if self.artist_relations:
-            self.mbArtistDetails = self.manager.parse_mbartist_json(
+            self.artist_details = self.manager.parse_mbartist_json(
                 self.artist_relations
             )
         else:
-            self.mbArtistDetails = (
+            self.artist_details = (
                 await self.manager.create_artist_details_from_simple_artist_track(self)
             )
 

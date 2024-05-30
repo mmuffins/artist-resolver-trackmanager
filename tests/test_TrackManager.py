@@ -312,7 +312,7 @@ async def test_formatted_new_artist_multiple_artists():
     artist3.custom_name = "Custom Group3"
     artist3.include = False  # This artist should be excluded
 
-    track.mbArtistDetails = [artist1, artist2, artist3]
+    track.artist_details = [artist1, artist2, artist3]
 
     # Act
     concatenated_string = track.formatted_new_artist

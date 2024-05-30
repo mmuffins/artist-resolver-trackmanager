@@ -1294,7 +1294,7 @@ async def test_read_file_metadata_read_artist_json_true_creates_simple_artist(
         for artist in mbartist_manager.artist_data.values()
     )
     assert all(
-        isinstance(artist, MbArtistDetails) for artist in mbartist_track.mbArtistDetails
+        isinstance(artist, MbArtistDetails) for artist in mbartist_track.artist_details
     )
 
     assert all(
@@ -1303,5 +1303,5 @@ async def test_read_file_metadata_read_artist_json_true_creates_simple_artist(
     )
     assert all(
         isinstance(artist, SimpleArtistDetails)
-        for artist in simpleartist_track.mbArtistDetails
+        for artist in simpleartist_track.artist_details
     )
