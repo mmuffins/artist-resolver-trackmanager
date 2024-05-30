@@ -575,13 +575,13 @@ class TrackDetails:
     @property
     def formatted_new_artist(self) -> str:
         """
-        Returns a formatted string for all mbartists of the track
+        Returns a formatted string for all artist_details of the track
         """
 
         return "; ".join(self.included_artist_list)
 
     @property
-    def included_artist_list(self) -> str:
+    def included_artist_list(self) -> list[str]:
         """
         Returns a formatted string for all artists of the object
         """
@@ -665,7 +665,7 @@ class TrackDetails:
         # e.g. groups, or character-person combnations.
         # Make sure to split on semicolon again to properly write these entries as
         # separate id3 tags
-        artists = self.get_included_artist_list or self.artist
+        artists = self.included_artist_list or self.artist
         split_artists = []
         for entry in artists:
             split_artists.extend([artist.strip() for artist in entry.split(";")])

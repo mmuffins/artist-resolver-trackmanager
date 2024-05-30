@@ -461,11 +461,6 @@ async def test_artist_without_id_found_by_name_when_saving(respx_mock):
         "name"
     ] == artist.custom_name, "Call to verify artist did not have expected parameters"
 
-    # # post new artist
-    # assert respx_mock.calls[1].request.method == "POST", "Call to create new artist was not of type POST"
-    # call_1_content = json.loads(respx_mock.calls[1].request.content.decode())
-    # assert call_1_content == {'Name': artist.custom_name}, f"Post body to create new artist did not match expected object"
-
 
 @pytest.mark.asyncio
 @respx.mock(assert_all_mocked=True)
@@ -981,3 +976,36 @@ async def test_update_from_simple_artist_dict_sets_has_server_data(respx_mock):
 
     # Assert
     assert artist.has_server_data, "Expected artist.has_server_data to be True"
+
+
+@pytest.mark.asyncio
+async def test_apply_custom_tag_values_handles_semicolon():
+    # Arrange
+    manager = TrackManager()
+    track = TrackDetails("/fake/path/file1.mp3", manager)
+    track.title = "test title"
+    track.artist = ["test artist1"]
+
+    artist = SimpleArtistDetails(
+        name="Artist1",
+        type="Person",
+        disambiguation="",
+        sort_name="Artist1",
+        id="mock-artist-id",
+        aliases=[],
+        type_id="b6e035f4-3ce9-331c-97df-83397230b0df",
+        joinphrase="",
+        product="TestProduct",
+        product_id=1,
+    )
+    artist.custom_name = "CustomArtist1; CustomArtist2"
+    track.artist_details.append(artist)
+
+    # Act
+    track.apply_custom_tag_values()
+
+    # Assert
+    assert track.artist == [
+        "CustomArtist1",
+        "CustomArtist2",
+    ], "The artist names should be split by semicolon"
