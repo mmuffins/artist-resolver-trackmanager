@@ -734,7 +734,7 @@ async def test_formatted_artist():
     ), "Failed to handle single artist correctly"
 
 
-# @pytest.mark.skip(reason="integration test, only called manually")
+@pytest.mark.skip(reason="integration test, only called manually")
 @pytest.mark.asyncio
 async def test_txxx_delete_artist_relations_frame():
     # not really a unit test since it needs a specific file to exist
