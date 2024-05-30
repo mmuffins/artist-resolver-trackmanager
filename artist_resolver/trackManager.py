@@ -777,7 +777,7 @@ class TrackManager:
             new_tracks.append(new_track)
             loaded_file_paths.add(normalized_file)
 
-        await self.read_file_metadata(new_tracks)
+        await self.read_files(new_tracks)
 
     def validate_files(self, files: list[str]) -> None:
         """
@@ -809,7 +809,7 @@ class TrackManager:
             )
         )
 
-    async def read_file_metadata(self, tracks: list[TrackDetails]) -> None:
+    async def read_files(self, tracks: list[TrackDetails]) -> None:
         """
         Reads ID3 tags for the provided list of tracks.
         """

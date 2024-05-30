@@ -606,14 +606,14 @@ async def test_load_files_valid_files(mocker):
     files = ["/fake/path/file1.mp3", "/fake/path/file2.mp3", "/fake/path/file3.mp3"]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(files)
 
     # Assert
-    manager.read_file_metadata.assert_awaited_once()
+    manager.read_files.assert_awaited_once()
     assert len(manager.tracks) == len(files)
     for i in range(len(files)):
         assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
@@ -628,8 +628,8 @@ async def test_load_files_duplicate_files(mocker):
     file2 = ["/fake/path/file2.mp3"]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(file1)
@@ -672,14 +672,14 @@ async def test_load_files_with_path_normalization(mocker):
     ]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(files)
 
     # Assert
-    manager.read_file_metadata.assert_awaited_once()
+    manager.read_files.assert_awaited_once()
     assert len(manager.tracks) == 1
     assert os.path.normpath(manager.tracks[0].file_path) == os.path.normpath(files[0])
 
@@ -694,14 +694,14 @@ async def test_load_files_with_mixed_slashes(mocker):
     ]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(files)
 
     # Assert
-    manager.read_file_metadata.assert_awaited_once()
+    manager.read_files.assert_awaited_once()
     assert len(manager.tracks) == len(files)
     for i in range(len(files)):
         assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
