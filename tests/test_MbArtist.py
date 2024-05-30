@@ -89,8 +89,8 @@ async def test_create_mbartist_objects_without_db_information(respx_mock):
     await manager.update_artists_info_from_db()
 
     # Assert
-    assert manager.artist_data[artist1.mbid].custom_name == artist1.sort_name
-    assert manager.artist_data[artist2.mbid].custom_name == artist2.sort_name
+    assert manager.artist_data[artist1.mbid].custom_name == "Artist1 Firstname"
+    assert manager.artist_data[artist2.mbid].custom_name == "Artist2 Firstname"
     assert manager.artist_data[artist1.mbid].custom_original_name == artist1.name
     assert manager.artist_data[artist2.mbid].custom_original_name == artist2.name
     assert manager.artist_data[artist1.mbid].include == artist1.include
