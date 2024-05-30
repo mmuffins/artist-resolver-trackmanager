@@ -103,7 +103,7 @@ class MbArtistDetails:
         """
 
         formatted_artist = self.custom_name if self.custom_name else self.name
-        if self.type.lower() in ["character", "group"]:
+        if self.type is None or self.type.lower() in ["character", "group"]:
             return f"({formatted_artist.strip('()')})"
 
         return formatted_artist
