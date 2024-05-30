@@ -504,11 +504,18 @@ class TrackDetails:
         "TPE3": {"property": "original_title", "frame": id3.TPE3},
     }
 
+    txxx_mappings = {
+        "MusicBrainz Album Id": {"property": "mb_album_id"},
+        "MusicBrainz Release Track Id": {"property": "mb_track_id"},
+    }
+
     def __init__(self, file_path: str, manager):
         self.file_path: str = file_path
         self.manager: TrackManager = manager
         self.title: str = None
         self.artist: List[str] = []
+        self.mb_track_id: str = None
+        self.mb_album_id: str = None
         self.album: str = None
         self.album_artist: str = None
         self.grouping: str = None
@@ -557,7 +564,7 @@ class TrackDetails:
     @staticmethod
     def get_id3_value(id3: id3.ID3, tag: str):
         """
-        Returns the correct value for an id3 tag
+        Returns the value for an id3 tag
         """
 
         # some tags commonly contain multiple values and need to be handled accordingly
@@ -577,6 +584,15 @@ class TrackDetails:
                     )
                 return (value.text)[0]
 
+    @staticmethod
+    def get_txxx_value(id3: id3.ID3, description: str):
+        """
+        Returns the value for an txxx frame id3 tag
+        """
+
+        txxx = id3.getall(f"TXXX:{description}")
+        return txxx[0].text[0] if txxx else None
+
     async def read_file_metadata(self, read_artist_json: bool = True) -> None:
         """
         Reads mp3 tags from a file
@@ -589,10 +605,15 @@ class TrackDetails:
             value = TrackDetails.get_id3_value(self.id3, tag)
             setattr(self, mapping["property"], value)
 
-        if read_artist_json:
+        for description, mapping in self.txxx_mappings.items():
+            value = TrackDetails.get_txxx_value(self.id3, description)
+            setattr(self, mapping["property"], value)
+
             # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
-            txxx = self.id3.getall("TXXX:artist_relations_json")
-            self.artist_relations = txxx[0].text[0] if txxx else None
+        if read_artist_json:
+            self.artist_relations = TrackDetails.get_txxx_value(
+                self.id3, "artist_relations_json"
+            )
 
         await self.create_artist_objects()
 
