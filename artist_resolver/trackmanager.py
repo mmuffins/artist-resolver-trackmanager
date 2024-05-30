@@ -187,7 +187,7 @@ class MbArtistDetails:
         resolved_list = [
             artist["definition"]
             for artist in artist_cache.values()
-            if artist["parent"] is parent
+            if artist["parent"] == parent
         ]
 
         for artist in resolved_list:
