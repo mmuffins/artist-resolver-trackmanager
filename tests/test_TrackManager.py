@@ -732,3 +732,48 @@ async def test_formatted_artist():
     assert (
         formatted_artist == "Single Artist"
     ), "Failed to handle single artist correctly"
+
+
+# @pytest.mark.skip(reason="integration test, only called manually")
+@pytest.mark.asyncio
+async def test_txxx_delete_artist_relations_frame():
+    # not really a unit test since it needs a specific file to exist
+    # to verify that the actual mutagen tags work, but it's handy to keep around
+    # Arrange
+    file_path = "C:/folder/file.mp3"
+    manager = TrackManager()
+
+    # Act
+    # Load the file
+    await manager.load_files([file_path])
+
+    # Check if file was loaded correctly
+    assert len(manager.tracks) == 1
+    track = manager.tracks[0]
+
+    # Update artist info from the database
+    await manager.update_artists_info_from_db()
+
+    # Clear the artist_relations value to simulate deletion by user
+    track.artist_relations = None
+
+    # Save the file metadata
+    track.save_file_metadata()
+
+    # Reload the file to verify the frame was deleted
+    await manager.load_files([file_path])
+    track = manager.tracks[0]
+
+    # Assert
+    artist_relations_frame = next(
+        (
+            frame
+            for frame in track.id3.getall("TXXX")
+            if frame.desc == "artist_relations_json"
+        ),
+        None,
+    )
+
+    assert (
+        artist_relations_frame is None
+    ), "The artist_relations_json frame should be deleted"
