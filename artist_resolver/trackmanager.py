@@ -75,7 +75,7 @@ class MbArtistDetails:
         self.aliases = aliases
         self.type_id = type_id
         self.joinphrase = joinphrase
-        self.custom_name = sort_name
+        self.custom_name = sort_name.replace(",", "") if sort_name else sort_name
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = name
         self.id: int = id
@@ -144,10 +144,6 @@ class MbArtistDetails:
         if not any(a.mbid == artist.mbid for a in artist_list):
             artist_list.append(artist)
 
-        # Flatten nested artists
-        for relation in data.get("relations", []):
-            cls.from_dict(relation, artist_list)
-
     @staticmethod
     def parse_json(json_str: str) -> list["MbArtistDetails"]:
         """
@@ -155,11 +151,169 @@ class MbArtistDetails:
         """
 
         data = json.loads(json_str)
+        artist_relation_cache = MbArtistDetails.build_artist_relation_cache(
+            data, {}, None, None
+        )
+        sorted_data = MbArtistDetails.sort_artist_json(artist_relation_cache, None)
+        flattened_data = MbArtistDetails.flatten_artist_json(sorted_data)
         artist_list: list[MbArtistDetails] = []
-        for item in data:
+        for item in flattened_data:
             MbArtistDetails.from_dict(item, artist_list)
+            pass
 
         return artist_list
+
+    @staticmethod
+    def flatten_artist_json(data: list[dict]) -> list[dict]:
+        """
+        Preprocess the artist JSON data to reorder top-level elements and handle nested relations.
+        """
+
+        result = []
+
+        def recurse(artist):
+            result.append(artist)
+            if "relations" in artist and artist["relations"]:
+                for relation in artist["relations"]:
+                    recurse(relation)
+
+        for artist in data:
+            recurse(artist)
+
+        return result
+
+        def flatten_relations(item: dict, parent_type: str = None) -> list[dict]:
+            flat_list = []
+            item["parent_type"] = parent_type
+            flat_list.append(item)
+            for relation in item.get("relations", []):
+                flat_list.extend(flatten_relations(relation, item["type"]))
+            item["relations"] = []  # Clear the relations as they are now flattened
+            return flat_list
+
+        combined_flat_list = []
+        for item in data:
+            flat_list = flatten_relations(item)
+            # Process the flat list to reorder based on type
+            # for i in range(len(flat_list) - 1, 0, -1):
+            #     if (
+            #         flat_list[i]["type"].lower() == "person"
+            #         and flat_list[i - 1]["type"].lower() == "character"
+            #     ):
+            #         flat_list[i], flat_list[i - 1] = flat_list[i - 1], flat_list[i]
+            combined_flat_list.extend(flat_list)
+
+        # nested relations can occur multiple times and need to be reversed,
+        # but the overall top-level order also has to be kept intact,
+        # so reversing and filtering twice is the easiest way to go
+        # combined_flat_list.reverse()
+
+        # reversed_list = []
+        # for artist in combined_flat_list:
+        #     if not any(artist["id"] == a["id"] for a in reversed_list):
+        #         reversed_list.append(artist)
+
+        # reversed_list.reverse()
+        # filtered_list = []
+        # for artist in reversed_list:
+        #     if not any(artist["id"] == a["id"] for a in filtered_list):
+        #         filtered_list.append(artist)
+
+        # return filtered_list
+
+    @staticmethod
+    def sort_artist_json(artist_cache: dict, parent: str) -> list[dict]:
+        resolved_list = [
+            artist["definition"]
+            for artist in artist_cache.values()
+            if artist["parent"] is parent
+        ]
+
+        for artist in resolved_list:
+            artist["relations"] = []
+            artist["relations"] = MbArtistDetails.sort_artist_json(
+                artist_cache, artist["id"]
+            )
+
+        return resolved_list
+
+    @staticmethod
+    def build_artist_relation_cache(
+        data: list[dict],
+        artist_cache,
+        parent_id: str = None,
+        parent_type: str = None,
+    ) -> dict:
+        """
+        Reorders the artist list based on the joinphrase property.
+        """
+
+        reordered_data = MbArtistDetails.reorder_json_cv(data)
+
+        for artist in reordered_data:
+            if artist["id"] in artist_cache:
+                artist_entry = artist_cache[artist["id"]]
+            else:
+                artist_entry = {
+                    "type": artist["type"],
+                    "parent": parent_id,
+                    "parent_type": parent_type,
+                    "definition": artist,
+                }
+                artist_cache[artist["id"]] = artist_entry
+
+            if artist_entry["parent"] is None and parent_id is not None:
+                artist_entry["parent"] = parent_id
+                artist_entry["parent_type"] = parent_type
+
+            if (
+                artist_entry["type"].lower() == "person"
+                and artist_entry["parent_type"] is not None
+                and artist_entry["parent_type"].lower() == "character"
+            ):
+                old_parent = artist_cache[artist_entry["parent"]]
+                artist_entry["parent"] = old_parent["parent"]
+                old_parent["parent"] = artist["id"]
+
+                old_parent_type = old_parent["parent_type"]
+                old_parent["parent_type"] = artist_entry["type"]
+                artist_entry["parent_type"] = old_parent_type
+
+            if artist["relations"]:
+                MbArtistDetails.build_artist_relation_cache(
+                    artist["relations"],
+                    artist_cache,
+                    artist["id"],
+                    artist_entry["type"],
+                )
+
+        return artist_cache
+
+    @staticmethod
+    def reorder_json_cv(data: list[dict]) -> list[dict]:
+        """
+        Reorders the artist list based on the joinphrase property.
+        """
+        reordered_data = []
+        reordered_data.extend(data)
+
+        # swap elements if they follow pattern 'Artist 1 (CV. Artist2)'
+        cv_pattern = re.compile(r"^\(cv[:.\s]", re.IGNORECASE)
+        for i in range(len(data) - 1):
+            if (
+                "joinphrase" not in reordered_data[i]
+                or "joinphrase" not in reordered_data[i + 1]
+            ):
+                continue
+
+            if cv_pattern.match(reordered_data[i]["joinphrase"]) and reordered_data[
+                i + 1
+            ]["joinphrase"].startswith(")"):
+                reordered_data[i], reordered_data[i + 1] = (
+                    reordered_data[i + 1],
+                    reordered_data[i],
+                )
+        return reordered_data
 
 
 class SimpleArtistDetails(MbArtistDetails):
@@ -402,7 +556,7 @@ class TrackDetails:
         self.product: str = None
         self.artist_relations = None
         self.update_file: bool = True
-        self.mbArtistDetails: List[MbArtistDetails] = []
+        self.artist_details: List[MbArtistDetails] = []
 
     def __str__(self):
         return f"{self.title}"
@@ -434,7 +588,7 @@ class TrackDetails:
 
         return [
             artist.formatted_artist
-            for artist in self.mbArtistDetails
+            for artist in self.artist_details
             if artist.include is True
         ]
 
@@ -461,7 +615,7 @@ class TrackDetails:
                     )
                 return (value.text)[0]
 
-    async def read_file_metadata(self) -> None:
+    async def read_file_metadata(self, read_artist_json: bool = True) -> None:
         """
         Reads mp3 tags from a file
         """
@@ -473,17 +627,10 @@ class TrackDetails:
             value = TrackDetails.get_id3_value(self.id3, tag)
             setattr(self, mapping["property"], value)
 
-        # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
-        artist_relations_frame = next(
-            (
-                frame
-                for frame in self.id3.getall("TXXX")
-                if frame.desc == "artist_relations_json"
-            ),
-            None,
-        )
-        if artist_relations_frame:
-            self.artist_relations = artist_relations_frame.text[0]
+        if read_artist_json:
+            # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
+            txxx = self.id3.getall("TXXX:artist_relations_json")
+            self.artist_relations = txxx[0].text[0] if txxx else None
 
         await self.create_artist_objects()
 
@@ -493,11 +640,11 @@ class TrackDetails:
         """
 
         if self.artist_relations:
-            self.mbArtistDetails = self.manager.parse_mbartist_json(
+            self.artist_details = self.manager.parse_mbartist_json(
                 self.artist_relations
             )
         else:
-            self.mbArtistDetails = (
+            self.artist_details = (
                 await self.manager.create_artist_details_from_simple_artist_track(self)
             )
 
@@ -528,7 +675,6 @@ class TrackDetails:
         """
         Writes changed id3 tags back to the filesystem
         """
-
         file_changed: bool = False
 
         for tag, mapping in self.tag_mappings.items():
@@ -546,6 +692,25 @@ class TrackDetails:
                     # the current property doesn't have a value, but the file doesn't
                     # pop is executed immediately, so file_changed doesn't need to be set
                     self.id3.pop(tag, None)
+
+        txxx = self.id3.getall("TXXX:artist_relations_json")
+        artist_relations_frame = txxx[0] if txxx else None
+
+        if self.artist_relations:
+            if artist_relations_frame:
+                if artist_relations_frame.text[0] != self.artist_relations:
+                    artist_relations_frame.text[0] = self.artist_relations
+                    file_changed = True
+            else:
+                new_frame = id3.TXXX(
+                    encoding=3, desc="artist_relations_json", text=self.artist_relations
+                )
+                self.id3.add(new_frame)
+                file_changed = True
+        else:
+            if artist_relations_frame:
+                self.id3.delall("TXXX:artist_relations_json")
+                file_changed = True
 
         if file_changed:
             self.id3.save(self.file_path)
@@ -583,7 +748,7 @@ class TrackManager:
         # Create a set of all artist MBIDs that are still referenced by remaining tracks
         referenced_artist_mbids = set()
         for track in self.tracks:
-            for artist in track.mbArtistDetails:
+            for artist in track.artist_details:
                 referenced_artist_mbids.add(artist.mbid)
 
         # Remove artists from artist_data if they are no longer referenced by any tracks
@@ -596,7 +761,7 @@ class TrackManager:
         # Remove track references from the track manager
         track.manager = None
 
-    async def load_files(self, files: list[str]) -> None:
+    async def load_files(self, files: list[str], read_artist_json: bool = True) -> None:
         """
         Loads the provided list of MP3 files and reads their ID3 tags.
         Throws an exception if any file is not an MP3 file.
@@ -615,7 +780,7 @@ class TrackManager:
             new_tracks.append(new_track)
             loaded_file_paths.add(normalized_file)
 
-        await self.read_file_metadata(new_tracks)
+        await self.read_files(new_tracks, read_artist_json)
 
     def validate_files(self, files: list[str]) -> None:
         """
@@ -647,11 +812,15 @@ class TrackManager:
             )
         )
 
-    async def read_file_metadata(self, tracks: list[TrackDetails]) -> None:
+    async def read_files(
+        self, tracks: list[TrackDetails], read_artist_json: bool = True
+    ) -> None:
         """
         Reads ID3 tags for the provided list of tracks.
         """
-        await asyncio.gather(*(track.read_file_metadata() for track in tracks))
+        await asyncio.gather(
+            *(track.read_file_metadata(read_artist_json) for track in tracks)
+        )
 
     async def update_artists_info_from_db(self) -> None:
         """

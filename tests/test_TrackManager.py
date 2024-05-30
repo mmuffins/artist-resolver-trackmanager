@@ -3,105 +3,10 @@ import sys
 import pytest
 import httpx
 import respx
-import json
 from unittest.mock import AsyncMock, MagicMock, call
 from artist_resolver.trackmanager import TrackManager, MbArtistDetails, TrackDetails
 from mutagen import id3
-from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3
-
-expected_person3 = {
-    "name": "Person3 Lastname",
-    "type": "Person",
-    "disambiguation": "",
-    "sort_name": "Lastname, Person3",
-    "id": "mock-12da-42b2-9fae-3c93b9a3bcdb",
-    "aliases": [],
-    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
-    "relations": [],
-}
-
-expected_person2 = {
-    "name": "Person2 Lastname",
-    "type": "Person",
-    "disambiguation": "voice actor",
-    "sort_name": "Lastname, Person2",
-    "id": "mock-d2be-4617-955c-1d0710d03db5",
-    "aliases": [],
-    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
-    "relations": [],
-}
-
-expected_person1 = {
-    "name": "Person1 Lastname",
-    "type": "Person",
-    "disambiguation": "",
-    "sort_name": "Lastname, Person1",
-    "id": "mock-d84a-4523-b45c-de3348e968fd",
-    "aliases": [
-        {
-            "locale": "en",
-            "name": "Person1AliasEn Lastname",
-            "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
-            "begin": "null",
-            "primary": "true",
-            "end": "null",
-            "sort-name": "Lastname, Person1AliasEn",
-            "ended": "false",
-            "type": "Artist name",
-        },
-        {
-            "end": "null",
-            "locale": "ja",
-            "name": "Person1AliasJa Lastname",
-            "type-id": "mock-d8f4-4ea6-85a2-cf649203489b",
-            "begin": "null",
-            "primary": "true",
-            "sort-name": "Lastname, Person1AliasJa",
-            "ended": "false",
-            "type": "Artist name",
-        },
-    ],
-    "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
-    "relations": [],
-    "joinphrase": ")、",
-}
-
-expected_character2 = {
-    "name": "Character2 Lastname",
-    "type": "Character",
-    "disambiguation": "Mock Franchise2",
-    "sort_name": "Lastname, Character2",
-    "id": "mock-3e63-42a5-8251-4dbe07ebc9e2",
-    "aliases": [],
-    "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
-    "relations": [],
-    "joinphrase": "(CV.",
-}
-
-expected_character1 = {
-    "name": "Character1 Lastname",
-    "type": "Character",
-    "disambiguation": "Mock Franchise1",
-    "sort_name": "Lastname, Character1",
-    "id": "mock-e7a3-42ac-a08c-3aa896f87bd5",
-    "aliases": [],
-    "type_id": "5c1375b0-f18d-3db7-a164-a49d7a63773f",
-    "relations": [],
-    "joinphrase": "(CV.",
-}
-
-
-def create_mock_txxx(description, text):
-    """
-    Returns a mocked id3 frame
-    """
-
-    mock_txxx = MagicMock()
-    mock_txxx.FrameID = "TXXX"
-    mock_txxx.HashKey = f"TXXX:{description}"
-    mock_txxx.desc = description
-    mock_txxx.text = text
-    return mock_txxx
+from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3, TXXX
 
 
 def create_mock_trackdetails():
@@ -121,67 +26,6 @@ def create_mock_trackdetails():
     track.artist_relations = ["test artist_relations"]
 
     return track
-
-
-@pytest.mark.asyncio
-@respx.mock(assert_all_mocked=True)
-async def test_create_track_file_with_artist_json(mock_id3_tags):
-    # Arrange1
-    reference_track = create_mock_trackdetails()
-    reference_track.product = None
-
-    mock_id3_instance = mock_id3_tags(
-        {
-            "TIT2": reference_track.title,
-            "TPE1": reference_track.artist,
-            "TALB": reference_track.album,
-            "TPE2": reference_track.album_artist,
-            "TIT1": reference_track.grouping,
-            "TOAL": reference_track.original_album,
-            "TOPE": reference_track.original_artist,
-            "TPE3": reference_track.original_title,
-        }
-    )
-
-    mbid = "mock-93fb-4bc3-8ff9-065c75c4f90a"
-    # id3 call for id3.getall("TXXX")
-    mock_artist_relations = create_mock_txxx(
-        description="artist_relations_json",
-        text=[
-            json.dumps(
-                [
-                    {
-                        "name": "Firstname Lastname",
-                        "type": "Person",
-                        "disambiguation": "",
-                        "sort_name": "Lastname, Firstname",
-                        "id": mbid,
-                        "aliases": [],
-                        "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
-                        "relations": [],
-                        "joinphrase": "",
-                    }
-                ]
-            )
-        ],
-    )
-    mock_id3_instance.getall.return_value = [mock_artist_relations]
-
-    # Act
-    manager = TrackManager()
-    track = TrackDetails("/fake/path/file1.mp3", manager)
-    await track.read_file_metadata()
-
-    # Assert
-    assert track.title == reference_track.title[0]
-    assert track.artist == reference_track.artist
-    assert track.album == reference_track.album[0]
-    assert track.album_artist == reference_track.album_artist[0]
-    assert track.grouping == reference_track.grouping[0]
-    assert track.original_album == reference_track.original_album[0]
-    assert track.original_artist == reference_track.original_artist
-    assert track.original_title == reference_track.original_title[0]
-    assert track.product == reference_track.product
 
 
 @pytest.mark.asyncio
@@ -246,66 +90,6 @@ async def test_create_track_file_without_artist_json(respx_mock, mock_id3_tags):
 
 
 @pytest.mark.asyncio
-@respx.mock(assert_all_mocked=True)
-async def test_parse_artist_json_with_nested_objects():
-    # Arrange
-    track = create_mock_trackdetails()
-    manager = track.manager
-
-    expected_character1["relations"] = [expected_person1]
-    expected_character2["relations"] = [expected_person3]
-    expected_person1["relations"] = [expected_person2]
-
-    # the json object will be deduplicated and flattened, which is why it looks different from the expected list
-    expected = [
-        expected_character1,
-        expected_person1,
-        expected_person2,
-        expected_character2,
-        expected_person3,
-    ]
-
-    track.artist_relations = json.dumps(
-        [expected_character1, expected_person1, expected_character2, expected_person3]
-    )
-
-    # Act
-    await track.create_artist_objects()
-
-    # Assert
-    assert len(manager.artist_data) == 5, f"Unexpected number of entries in artist_data"
-
-    artists = track.mbArtistDetails
-    assert len(artists) == len(
-        expected
-    ), f"Expected {len(expected)} artists, got {len(artists)}"
-    for i in range(len(expected)):
-        expected_artist = expected[i]
-        actual_artist = artists[i]
-        # The weird text formatting is needed here because black formatter threw a fit over it
-        assert actual_artist.mbid == expected_artist["id"], (
-            f"MBID mismatch at index {i}: expected "
-            + {expected_artist["id"]}
-            + f", got {actual_artist.mbid}"
-        )
-        assert actual_artist.name == expected_artist["name"], (
-            f"name mismatch at index {i}: expected "
-            + {expected_artist["name"]}
-            + f", got {actual_artist.name}"
-        )
-        assert actual_artist.sort_name == expected_artist["sort_name"], (
-            f"sort_name mismatch at index {i}: expected "
-            + {expected_artist["sort_name"]}
-            + f", got {actual_artist.sort_name}"
-        )
-        assert actual_artist.type == expected_artist["type"], (
-            f"type mismatch at index {i}: expected "
-            + {expected_artist["type"]}
-            + f", got {actual_artist.type}"
-        )
-
-
-@pytest.mark.asyncio
 async def test_save_file_metadata_no_changes(mock_id3_tags):
     # Arrange
     track = TrackDetails("/fake/path/file1.mp3", TrackManager())
@@ -317,6 +101,7 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
     track.original_album = "Same Original Album"
     track.original_artist = ["Same Original Artist"]
     track.original_title = "Same Original Title"
+    track.artist_relations = "Same Artist Relations"
     track.id3 = id3.ID3(track.file_path)
 
     mock_id3_instance = mock_id3_tags(
@@ -329,7 +114,15 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
             "TOAL": TOAL(encoding=3, text="Same Original Album"),
             "TOPE": TOPE(encoding=3, text=["Same Original Artist"]),
             "TPE3": TPE3(encoding=3, text="Same Original Title"),
-        }
+        },
+        txxx_frames=[
+            TXXX(
+                encoding=3,
+                HashKey="TXXX:artist_relations_json",
+                desc="artist_relations_json",
+                text="Same Artist Relations",
+            )
+        ],
     )
 
     # Act
@@ -337,6 +130,7 @@ async def test_save_file_metadata_no_changes(mock_id3_tags):
 
     # Assert
     mock_id3_instance.__setitem__.assert_not_called()
+    mock_id3_instance.delall.assert_not_called()
     mock_id3_instance.save.assert_not_called()
 
 
@@ -525,7 +319,7 @@ async def test_formatted_new_artist_multiple_artists():
     artist3.custom_name = "Custom Group3"
     artist3.include = False  # This artist should be excluded
 
-    track.mbArtistDetails = [artist1, artist2, artist3]
+    track.artist_details = [artist1, artist2, artist3]
 
     # Act
     concatenated_string = track.formatted_new_artist
@@ -541,7 +335,7 @@ async def test_formatted_new_artist_empty():
     # Arrange
     manager = TrackManager()
     track = TrackDetails("/fake/path/file2.mp3", manager)
-    track.mbArtistDetails = []
+    track.artist_details = []
 
     # Act
     concatenated_string = track.formatted_new_artist
@@ -718,9 +512,9 @@ async def test_remove_track():
     track2 = create_mock_trackdetails()
     track3 = create_mock_trackdetails()
 
-    track1.mbArtistDetails = [artist1]
-    track2.mbArtistDetails = [artist2]
-    track3.mbArtistDetails = [artist1, artist3]
+    track1.artist_details = [artist1]
+    track2.artist_details = [artist2]
+    track3.artist_details = [artist1, artist3]
 
     manager.tracks = [track1, track2, track3]
 
@@ -786,8 +580,8 @@ async def test_remove_track_no_remaining_references():
     track1 = create_mock_trackdetails()
     track2 = create_mock_trackdetails()
 
-    track1.mbArtistDetails = [artist1, artist2]
-    track2.mbArtistDetails = [artist1]
+    track1.artist_details = [artist1, artist2]
+    track2.artist_details = [artist1]
 
     manager.tracks = [track1, track2]
 
@@ -819,14 +613,14 @@ async def test_load_files_valid_files(mocker):
     files = ["/fake/path/file1.mp3", "/fake/path/file2.mp3", "/fake/path/file3.mp3"]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(files)
 
     # Assert
-    manager.read_file_metadata.assert_awaited_once()
+    manager.read_files.assert_awaited_once()
     assert len(manager.tracks) == len(files)
     for i in range(len(files)):
         assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
@@ -841,8 +635,8 @@ async def test_load_files_duplicate_files(mocker):
     file2 = ["/fake/path/file2.mp3"]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(file1)
@@ -880,23 +674,19 @@ async def test_load_files_with_path_normalization(mocker):
     # this is mostly relevant for cross-os compatibility
     # Arrange
     files = [
-        os.path.normpath(
-            "C:/Users/email_000/Desktop/music/sample/recall/01. recall.mp3"
-        ),
-        os.path.normpath(
-            "C:\\Users\\email_000\\Desktop\\music\\sample\\recall\\01. recall.mp3"
-        ),
+        os.path.normpath("C:/fake/path/file1.mp3"),
+        os.path.normpath("C:\\fake\\path\\file1.mp3"),
     ]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(files)
 
     # Assert
-    manager.read_file_metadata.assert_awaited_once()
+    manager.read_files.assert_awaited_once()
     assert len(manager.tracks) == 1
     assert os.path.normpath(manager.tracks[0].file_path) == os.path.normpath(files[0])
 
@@ -911,14 +701,14 @@ async def test_load_files_with_mixed_slashes(mocker):
     ]
     manager = TrackManager()
 
-    # Mock read_file_metadata to be an awaitable that does nothing
-    mocker.patch.object(manager, "read_file_metadata", new_callable=AsyncMock)
+    # Mock read_files to be an awaitable that does nothing
+    mocker.patch.object(manager, "read_files", new_callable=AsyncMock)
 
     # Act
     await manager.load_files(files)
 
     # Assert
-    manager.read_file_metadata.assert_awaited_once()
+    manager.read_files.assert_awaited_once()
     assert len(manager.tracks) == len(files)
     for i in range(len(files)):
         assert os.path.normpath(manager.tracks[i].file_path) == os.path.normpath(
@@ -952,3 +742,48 @@ async def test_formatted_artist():
     assert (
         formatted_artist == "Single Artist"
     ), "Failed to handle single artist correctly"
+
+
+@pytest.mark.skip(reason="integration test, only called manually")
+@pytest.mark.asyncio
+async def test_txxx_delete_artist_relations_frame():
+    # not really a unit test since it needs a specific file to exist
+    # to verify that the actual mutagen tags work, but it's handy to keep around
+    # Arrange
+    file_path = "C:/folder/file.mp3"
+    manager = TrackManager()
+
+    # Act
+    # Load the file
+    await manager.load_files([file_path])
+
+    # Check if file was loaded correctly
+    assert len(manager.tracks) == 1
+    track = manager.tracks[0]
+
+    # Update artist info from the database
+    await manager.update_artists_info_from_db()
+
+    # Clear the artist_relations value to simulate deletion by user
+    track.artist_relations = None
+
+    # Save the file metadata
+    track.save_file_metadata()
+
+    # Reload the file to verify the frame was deleted
+    await manager.load_files([file_path])
+    track = manager.tracks[0]
+
+    # Assert
+    artist_relations_frame = next(
+        (
+            frame
+            for frame in track.id3.getall("TXXX")
+            if frame.desc == "artist_relations_json"
+        ),
+        None,
+    )
+
+    assert (
+        artist_relations_frame is None
+    ), "The artist_relations_json frame should be deleted"

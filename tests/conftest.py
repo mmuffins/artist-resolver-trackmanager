@@ -8,13 +8,13 @@ def mock_id3_instance(mocker):
     """
     Fixture that returns a mocked mutagen id3 instance
     """
-
     mocked_id3 = mocker.patch("mutagen.id3.ID3", autospec=True)
     mock_id3_instance = MagicMock()
     mocked_id3.return_value = mock_id3_instance
     # Mock the main get_id3_object call to get a dummy object
     mocker.patch(
-        "artist_resolver.trackmanager.TrackDetails.get_id3_object", return_value=mock_id3_instance
+        "artist_resolver.trackmanager.TrackDetails.get_id3_object",
+        return_value=mock_id3_instance,
     )
     return mock_id3_instance
 
@@ -30,8 +30,7 @@ def mock_id3_tags(mock_id3_instance):
     A fixture to configure mock ID3 tags on a provided mock ID3 instance.
     """
 
-    def apply_mock(tags):
-
+    def apply_mock(tags, txxx_frames=None):
         def id3_get_side_effect(tag):
             value = tags.get(tag)
             if isinstance(value, (TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3)):
@@ -39,7 +38,13 @@ def mock_id3_tags(mock_id3_instance):
             else:
                 return MockID3Tag(value)
 
+        def id3_getall_side_effect(tag):
+            if tag == "TXXX:artist_relations_json":
+                return txxx_frames or []
+            return []
+
         mock_id3_instance.get.side_effect = id3_get_side_effect
+        mock_id3_instance.getall.side_effect = id3_getall_side_effect
         return mock_id3_instance
 
     return apply_mock

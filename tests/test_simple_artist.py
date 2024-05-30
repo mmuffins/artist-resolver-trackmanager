@@ -319,7 +319,7 @@ async def test_split_artist_string_into_simple_artist_objects(respx_mock):
 
     # Act
     await track.create_artist_objects()
-    simple_artists = track.mbArtistDetails
+    simple_artists = track.artist_details
 
     # Assert
     assert len(manager.artist_data) == len(
