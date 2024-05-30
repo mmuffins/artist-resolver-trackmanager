@@ -748,7 +748,7 @@ class TrackManager:
         # Create a set of all artist MBIDs that are still referenced by remaining tracks
         referenced_artist_mbids = set()
         for track in self.tracks:
-            for artist in track.mbArtistDetails:
+            for artist in track.artist_details:
                 referenced_artist_mbids.add(artist.mbid)
 
         # Remove artists from artist_data if they are no longer referenced by any tracks
