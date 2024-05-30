@@ -615,7 +615,7 @@ class TrackDetails:
                     )
                 return (value.text)[0]
 
-    async def read_file_metadata(self) -> None:
+    async def read_file_metadata(self, read_artist_json: bool = True) -> None:
         """
         Reads mp3 tags from a file
         """
@@ -627,9 +627,10 @@ class TrackDetails:
             value = TrackDetails.get_id3_value(self.id3, tag)
             setattr(self, mapping["property"], value)
 
-        # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
-        txxx = self.id3.getall("TXXX:artist_relations_json")
-        self.artist_relations = txxx[0].text[0] if txxx else None
+        if read_artist_json:
+            # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
+            txxx = self.id3.getall("TXXX:artist_relations_json")
+            self.artist_relations = txxx[0].text[0] if txxx else None
 
         await self.create_artist_objects()
 
@@ -701,7 +702,9 @@ class TrackDetails:
                     artist_relations_frame.text[0] = self.artist_relations
                     file_changed = True
             else:
-                new_frame = id3.TXXX(encoding=3, desc="artist_relations_json", text=self.artist_relations)
+                new_frame = id3.TXXX(
+                    encoding=3, desc="artist_relations_json", text=self.artist_relations
+                )
                 self.id3.add(new_frame)
                 file_changed = True
         else:
@@ -758,7 +761,7 @@ class TrackManager:
         # Remove track references from the track manager
         track.manager = None
 
-    async def load_files(self, files: list[str]) -> None:
+    async def load_files(self, files: list[str], read_artist_json: bool = True) -> None:
         """
         Loads the provided list of MP3 files and reads their ID3 tags.
         Throws an exception if any file is not an MP3 file.
@@ -777,7 +780,7 @@ class TrackManager:
             new_tracks.append(new_track)
             loaded_file_paths.add(normalized_file)
 
-        await self.read_files(new_tracks)
+        await self.read_files(new_tracks, read_artist_json)
 
     def validate_files(self, files: list[str]) -> None:
         """
@@ -809,11 +812,15 @@ class TrackManager:
             )
         )
 
-    async def read_files(self, tracks: list[TrackDetails]) -> None:
+    async def read_files(
+        self, tracks: list[TrackDetails], read_artist_json: bool = True
+    ) -> None:
         """
         Reads ID3 tags for the provided list of tracks.
         """
-        await asyncio.gather(*(track.read_file_metadata() for track in tracks))
+        await asyncio.gather(
+            *(track.read_file_metadata(read_artist_json) for track in tracks)
+        )
 
     async def update_artists_info_from_db(self) -> None:
         """

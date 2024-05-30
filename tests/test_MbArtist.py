@@ -7,6 +7,7 @@ from artist_resolver.trackmanager import (
     MbArtistDetails,
     TrackDetails,
     TrackManager,
+    SimpleArtistDetails,
 )
 
 
@@ -1231,3 +1232,76 @@ async def test_reorder_nested_relations_in_from_dict2():
     assert artists[0].name == "Group", "Expected first artist to be Group"
     assert artists[1].name == "Person", "Expected second artist to be Person"
     assert artists[2].name == "Character", "Expected third artist to be Character"
+
+
+@pytest.mark.asyncio
+async def test_read_file_metadata_read_artist_json_true_creates_simple_artist(
+    mock_id3_tags,
+):
+    # Arrange
+    reference_track = create_mock_trackdetails()
+    reference_track.product = None
+
+    artist_json = json.dumps(
+        [
+            {
+                "name": "Simple Artist",
+                "type": "Person",
+                "disambiguation": "",
+                "sort_name": "Simple, Artist",
+                "id": "simple-artist-id",
+                "aliases": [],
+                "type_id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+                "relations": [],
+                "joinphrase": "",
+            }
+        ]
+    )
+
+    mock_id3_tags(
+        {
+            "TIT2": reference_track.title,
+            "TPE1": reference_track.artist,
+            "TALB": reference_track.album,
+            "TPE2": reference_track.album_artist,
+            "TIT1": reference_track.grouping,
+            "TOAL": reference_track.original_album,
+            "TOPE": reference_track.original_artist,
+            "TPE3": reference_track.original_title,
+        },
+        txxx_frames=[
+            TXXX(
+                encoding=3,
+                HashKey="TXXX:artist_relations_json",
+                desc="artist_relations_json",
+                text=[artist_json],
+            )
+        ],
+    )
+
+    # Act
+    mbartist_manager = TrackManager()
+    mbartist_track = TrackDetails("/fake/path/file1.mp3", mbartist_manager)
+    await mbartist_track.read_file_metadata(read_artist_json=True)
+
+    simpleartist_manager = TrackManager()
+    simpleartist_track = TrackDetails("/fake/path/file1.mp3", simpleartist_manager)
+    await simpleartist_track.read_file_metadata(read_artist_json=False)
+
+    # Assert
+    assert all(
+        isinstance(artist, MbArtistDetails)
+        for artist in mbartist_manager.artist_data.values()
+    )
+    assert all(
+        isinstance(artist, MbArtistDetails) for artist in mbartist_track.mbArtistDetails
+    )
+
+    assert all(
+        isinstance(artist, SimpleArtistDetails)
+        for artist in simpleartist_manager.artist_data.values()
+    )
+    assert all(
+        isinstance(artist, SimpleArtistDetails)
+        for artist in simpleartist_track.mbArtistDetails
+    )
