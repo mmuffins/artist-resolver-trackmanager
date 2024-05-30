@@ -182,45 +182,6 @@ class MbArtistDetails:
 
         return result
 
-        def flatten_relations(item: dict, parent_type: str = None) -> list[dict]:
-            flat_list = []
-            item["parent_type"] = parent_type
-            flat_list.append(item)
-            for relation in item.get("relations", []):
-                flat_list.extend(flatten_relations(relation, item["type"]))
-            item["relations"] = []  # Clear the relations as they are now flattened
-            return flat_list
-
-        combined_flat_list = []
-        for item in data:
-            flat_list = flatten_relations(item)
-            # Process the flat list to reorder based on type
-            # for i in range(len(flat_list) - 1, 0, -1):
-            #     if (
-            #         flat_list[i]["type"].lower() == "person"
-            #         and flat_list[i - 1]["type"].lower() == "character"
-            #     ):
-            #         flat_list[i], flat_list[i - 1] = flat_list[i - 1], flat_list[i]
-            combined_flat_list.extend(flat_list)
-
-        # nested relations can occur multiple times and need to be reversed,
-        # but the overall top-level order also has to be kept intact,
-        # so reversing and filtering twice is the easiest way to go
-        # combined_flat_list.reverse()
-
-        # reversed_list = []
-        # for artist in combined_flat_list:
-        #     if not any(artist["id"] == a["id"] for a in reversed_list):
-        #         reversed_list.append(artist)
-
-        # reversed_list.reverse()
-        # filtered_list = []
-        # for artist in reversed_list:
-        #     if not any(artist["id"] == a["id"] for a in filtered_list):
-        #         filtered_list.append(artist)
-
-        # return filtered_list
-
     @staticmethod
     def sort_artist_json(artist_cache: dict, parent: str) -> list[dict]:
         resolved_list = [
