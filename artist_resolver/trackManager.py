@@ -75,7 +75,7 @@ class MbArtistDetails:
         self.aliases = aliases
         self.type_id = type_id
         self.joinphrase = joinphrase
-        self.custom_name = sort_name.replace(",", "")
+        self.custom_name = sort_name.replace(",", "") if sort_name else sort_name
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = name
         self.id: int = id
@@ -301,10 +301,14 @@ class MbArtistDetails:
         cv_pattern = re.compile(r"^\(cv[:.\s]", re.IGNORECASE)
         for i in range(len(data) - 1):
             if (
-                hasattr(reordered_data[i], "joinphrase")
-                and cv_pattern.match(reordered_data[i]["joinphrase"])
-                and reordered_data[i + 1]["joinphrase"].startswith(")")
+                "joinphrase" not in reordered_data[i]
+                or "joinphrase" not in reordered_data[i + 1]
             ):
+                continue
+
+            if cv_pattern.match(reordered_data[i]["joinphrase"]) and reordered_data[
+                i + 1
+            ]["joinphrase"].startswith(")"):
                 reordered_data[i], reordered_data[i + 1] = (
                     reordered_data[i + 1],
                     reordered_data[i],
