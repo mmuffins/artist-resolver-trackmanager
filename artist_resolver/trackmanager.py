@@ -138,6 +138,8 @@ class MbArtistDetails:
             joinphrase=data.get("joinphrase", ""),
         )
 
+        artist.invalid_relation = data.get("invalid_connection", None)
+
         if (not artist.type) or (artist.type.lower() not in ["person", "group"]):
             artist.include = False
 
@@ -228,11 +230,24 @@ class MbArtistDetails:
                 artist_entry["parent_type"] = parent_type
 
             if (
+                not artist_entry["type"]
+                or (
+                    artist_entry["type"] and artist_entry["type"].lower() == "character"
+                )
+            ) and (
+                artist_entry["parent_type"]
+                and artist_entry["parent_type"].lower() == "person"
+            ):
+                # person is parent of a character or none, mark as error
+                artist_entry["definition"]["invalid_relation"] = True
+
+            if (
                 artist_entry["type"]
                 and artist_entry["type"].lower() == "person"
                 and artist_entry["parent_type"]
                 and artist_entry["parent_type"].lower() == "character"
             ):
+                # parent of a person is a character or none, switch relation
                 old_parent = artist_cache[artist_entry["parent"]]
                 artist_entry["parent"] = old_parent["parent"]
                 old_parent["parent"] = artist["id"]
