@@ -210,51 +210,15 @@ class MbArtistDetails:
         """
         Reorders the artist list based on the joinphrase property.
         """
-
         reordered_data = MbArtistDetails.reorder_json_cv(data)
 
         for artist in reordered_data:
-            if artist["id"] in artist_cache:
-                artist_entry = artist_cache[artist["id"]]
-            else:
-                artist_entry = {
-                    "type": artist["type"],
-                    "parent": parent_id,
-                    "parent_type": parent_type,
-                    "definition": artist,
-                }
-                artist_cache[artist["id"]] = artist_entry
+            artist_entry = MbArtistDetails.update_artist_entry(
+                artist, artist_cache, parent_id, parent_type
+            )
 
-            if artist_entry["parent"] is None and parent_id is not None:
-                artist_entry["parent"] = parent_id
-                artist_entry["parent_type"] = parent_type
-
-            if (
-                not artist_entry["type"]
-                or (
-                    artist_entry["type"] and artist_entry["type"].lower() == "character"
-                )
-            ) and (
-                artist_entry["parent_type"]
-                and artist_entry["parent_type"].lower() == "person"
-            ):
-                # person is parent of a character or none, mark as error
+            if MbArtistDetails.should_mark_invalid_relation(artist_entry):
                 artist_entry["definition"]["invalid_relation"] = True
-
-            if (
-                artist_entry["type"]
-                and artist_entry["type"].lower() == "person"
-                and artist_entry["parent_type"]
-                and artist_entry["parent_type"].lower() == "character"
-            ):
-                # parent of a person is a character or none, switch relation
-                old_parent = artist_cache[artist_entry["parent"]]
-                artist_entry["parent"] = old_parent["parent"]
-                old_parent["parent"] = artist["id"]
-
-                old_parent_type = old_parent["parent_type"]
-                old_parent["parent_type"] = artist_entry["type"]
-                artist_entry["parent_type"] = old_parent_type
 
             if artist["relations"]:
                 MbArtistDetails.build_artist_relation_cache(
@@ -265,6 +229,66 @@ class MbArtistDetails:
                 )
 
         return artist_cache
+
+    @staticmethod
+    def update_artist_entry(
+        artist: dict, artist_cache: dict, parent_id: str, parent_type: str
+    ) -> dict:
+        """
+        Updates or creates an entry for the artist in the cache.
+        """
+        if artist["id"] in artist_cache:
+            artist_entry = artist_cache[artist["id"]]
+        else:
+            artist_entry = {
+                "type": artist["type"],
+                "parent": parent_id,
+                "parent_type": parent_type,
+                "definition": artist,
+            }
+            artist_cache[artist["id"]] = artist_entry
+
+        if artist_entry["parent"] is None and parent_id is not None:
+            artist_entry["parent"] = parent_id
+            artist_entry["parent_type"] = parent_type
+
+        MbArtistDetails.switch_invalid_parent_child_relation(
+            artist_entry, artist_cache, artist["id"]
+        )
+
+        return artist_entry
+
+    @staticmethod
+    def should_mark_invalid_relation(artist_entry: dict) -> bool:
+        """
+        Determines if an character-person relation was created in the wrong direction
+        """
+        return (
+            (not artist_entry["type"] or artist_entry["type"].lower() == "character")
+            and artist_entry["parent_type"]
+            and artist_entry["parent_type"].lower() == "person"
+        )
+
+    @staticmethod
+    def switch_invalid_parent_child_relation(
+        artist_entry: dict, artist_cache: dict, artist_id: str
+    ) -> None:
+        """
+        Switches the relation if a character is the parent of a person
+        """
+        if (
+            artist_entry["type"]
+            and artist_entry["type"].lower() == "person"
+            and artist_entry["parent_type"]
+            and artist_entry["parent_type"].lower() == "character"
+        ):
+            old_parent = artist_cache[artist_entry["parent"]]
+            artist_entry["parent"] = old_parent["parent"]
+            old_parent["parent"] = artist_id
+
+            old_parent_type = old_parent["parent_type"]
+            old_parent["parent_type"] = artist_entry["type"]
+            artist_entry["parent_type"] = old_parent_type
 
     @staticmethod
     def reorder_json_cv(data: list[dict]) -> list[dict]:
