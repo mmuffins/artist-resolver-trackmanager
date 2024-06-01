@@ -81,6 +81,7 @@ class MbArtistDetails:
         self.id: int = id
         self.has_server_data: bool = False
         self.updated_from_server: bool = False
+        self.invalid_relation: bool = False
 
     def __str__(self):
         return f"{self.name}"
