@@ -139,7 +139,7 @@ class MbArtistDetails:
             joinphrase=data.get("joinphrase", ""),
         )
 
-        artist.invalid_relation = data.get("invalid_connection", None)
+        artist.invalid_relation = data.get("invalid_relation", None)
 
         if (not artist.type) or (artist.type.lower() not in ["person", "group"]):
             artist.include = False
