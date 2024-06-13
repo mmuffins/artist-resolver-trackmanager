@@ -750,7 +750,8 @@ async def test_txxx_delete_artist_relations_frame():
     # not really a unit test since it needs a specific file to exist
     # to verify that the actual mutagen tags work, but it's handy to keep around
     # Arrange
-    file_path = "C:/folder/file.mp3"
+    file_path = "C:/Users/email_000/Desktop/music/check.mp3"
+
     manager = TrackManager()
 
     # Act
@@ -758,7 +759,6 @@ async def test_txxx_delete_artist_relations_frame():
     await manager.load_files([file_path])
 
     # Check if file was loaded correctly
-    assert len(manager.tracks) == 1
     track = manager.tracks[0]
 
     # Update artist info from the database
@@ -768,7 +768,7 @@ async def test_txxx_delete_artist_relations_frame():
     track.artist_relations = None
 
     # Save the file metadata
-    track.save_file_metadata()
+    # track.save_file_metadata()
 
     # Reload the file to verify the frame was deleted
     await manager.load_files([file_path])

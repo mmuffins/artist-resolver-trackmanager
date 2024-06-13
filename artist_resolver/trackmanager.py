@@ -81,6 +81,7 @@ class MbArtistDetails:
         self.id: int = id
         self.has_server_data: bool = False
         self.updated_from_server: bool = False
+        self.invalid_relation: bool = False
 
     def __str__(self):
         return f"{self.name}"
@@ -103,7 +104,7 @@ class MbArtistDetails:
         """
 
         formatted_artist = self.custom_name if self.custom_name else self.name
-        if self.type.lower() in ["character", "group"]:
+        if self.type is None or self.type.lower() in ["character", "group"]:
             return f"({formatted_artist.strip('()')})"
 
         return formatted_artist
@@ -117,6 +118,7 @@ class MbArtistDetails:
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = data["originalName"]
         self.id = data["id"]
+        self.type = data["type"]
         self.has_server_data = True
 
     @classmethod
@@ -137,6 +139,8 @@ class MbArtistDetails:
             type_id=data.get("type_id"),
             joinphrase=data.get("joinphrase", ""),
         )
+
+        artist.invalid_relation = data.get("invalid_relation", None)
 
         if (not artist.type) or (artist.type.lower() not in ["person", "group"]):
             artist.include = False
@@ -182,51 +186,12 @@ class MbArtistDetails:
 
         return result
 
-        def flatten_relations(item: dict, parent_type: str = None) -> list[dict]:
-            flat_list = []
-            item["parent_type"] = parent_type
-            flat_list.append(item)
-            for relation in item.get("relations", []):
-                flat_list.extend(flatten_relations(relation, item["type"]))
-            item["relations"] = []  # Clear the relations as they are now flattened
-            return flat_list
-
-        combined_flat_list = []
-        for item in data:
-            flat_list = flatten_relations(item)
-            # Process the flat list to reorder based on type
-            # for i in range(len(flat_list) - 1, 0, -1):
-            #     if (
-            #         flat_list[i]["type"].lower() == "person"
-            #         and flat_list[i - 1]["type"].lower() == "character"
-            #     ):
-            #         flat_list[i], flat_list[i - 1] = flat_list[i - 1], flat_list[i]
-            combined_flat_list.extend(flat_list)
-
-        # nested relations can occur multiple times and need to be reversed,
-        # but the overall top-level order also has to be kept intact,
-        # so reversing and filtering twice is the easiest way to go
-        # combined_flat_list.reverse()
-
-        # reversed_list = []
-        # for artist in combined_flat_list:
-        #     if not any(artist["id"] == a["id"] for a in reversed_list):
-        #         reversed_list.append(artist)
-
-        # reversed_list.reverse()
-        # filtered_list = []
-        # for artist in reversed_list:
-        #     if not any(artist["id"] == a["id"] for a in filtered_list):
-        #         filtered_list.append(artist)
-
-        # return filtered_list
-
     @staticmethod
     def sort_artist_json(artist_cache: dict, parent: str) -> list[dict]:
         resolved_list = [
             artist["definition"]
             for artist in artist_cache.values()
-            if artist["parent"] is parent
+            if artist["parent"] == parent
         ]
 
         for artist in resolved_list:
@@ -247,37 +212,15 @@ class MbArtistDetails:
         """
         Reorders the artist list based on the joinphrase property.
         """
-
         reordered_data = MbArtistDetails.reorder_json_cv(data)
 
         for artist in reordered_data:
-            if artist["id"] in artist_cache:
-                artist_entry = artist_cache[artist["id"]]
-            else:
-                artist_entry = {
-                    "type": artist["type"],
-                    "parent": parent_id,
-                    "parent_type": parent_type,
-                    "definition": artist,
-                }
-                artist_cache[artist["id"]] = artist_entry
+            artist_entry = MbArtistDetails.update_artist_entry(
+                artist, artist_cache, parent_id, parent_type
+            )
 
-            if artist_entry["parent"] is None and parent_id is not None:
-                artist_entry["parent"] = parent_id
-                artist_entry["parent_type"] = parent_type
-
-            if (
-                artist_entry["type"].lower() == "person"
-                and artist_entry["parent_type"] is not None
-                and artist_entry["parent_type"].lower() == "character"
-            ):
-                old_parent = artist_cache[artist_entry["parent"]]
-                artist_entry["parent"] = old_parent["parent"]
-                old_parent["parent"] = artist["id"]
-
-                old_parent_type = old_parent["parent_type"]
-                old_parent["parent_type"] = artist_entry["type"]
-                artist_entry["parent_type"] = old_parent_type
+            if MbArtistDetails.should_mark_invalid_relation(artist_entry):
+                artist_entry["definition"]["invalid_relation"] = True
 
             if artist["relations"]:
                 MbArtistDetails.build_artist_relation_cache(
@@ -288,6 +231,66 @@ class MbArtistDetails:
                 )
 
         return artist_cache
+
+    @staticmethod
+    def update_artist_entry(
+        artist: dict, artist_cache: dict, parent_id: str, parent_type: str
+    ) -> dict:
+        """
+        Updates or creates an entry for the artist in the cache.
+        """
+        if artist["id"] in artist_cache:
+            artist_entry = artist_cache[artist["id"]]
+        else:
+            artist_entry = {
+                "type": artist["type"],
+                "parent": parent_id,
+                "parent_type": parent_type,
+                "definition": artist,
+            }
+            artist_cache[artist["id"]] = artist_entry
+
+        if artist_entry["parent"] is None and parent_id is not None:
+            artist_entry["parent"] = parent_id
+            artist_entry["parent_type"] = parent_type
+
+        MbArtistDetails.switch_invalid_parent_child_relation(
+            artist_entry, artist_cache, artist["id"]
+        )
+
+        return artist_entry
+
+    @staticmethod
+    def should_mark_invalid_relation(artist_entry: dict) -> bool:
+        """
+        Determines if an character-person relation was created in the wrong direction
+        """
+        return (
+            (not artist_entry["type"] or artist_entry["type"].lower() == "character")
+            and artist_entry["parent_type"]
+            and artist_entry["parent_type"].lower() == "person"
+        )
+
+    @staticmethod
+    def switch_invalid_parent_child_relation(
+        artist_entry: dict, artist_cache: dict, artist_id: str
+    ) -> None:
+        """
+        Switches the relation if a character is the parent of a person
+        """
+        if (
+            artist_entry["type"]
+            and artist_entry["type"].lower() == "person"
+            and artist_entry["parent_type"]
+            and artist_entry["parent_type"].lower() == "character"
+        ):
+            old_parent = artist_cache[artist_entry["parent"]]
+            artist_entry["parent"] = old_parent["parent"]
+            old_parent["parent"] = artist_id
+
+            old_parent_type = old_parent["parent_type"]
+            old_parent["parent_type"] = artist_entry["type"]
+            artist_entry["parent_type"] = old_parent_type
 
     @staticmethod
     def reorder_json_cv(data: list[dict]) -> list[dict]:
@@ -542,11 +545,18 @@ class TrackDetails:
         "TPE3": {"property": "original_title", "frame": id3.TPE3},
     }
 
+    txxx_mappings = {
+        "MusicBrainz Album Id": {"property": "mb_album_id"},
+        "MusicBrainz Release Track Id": {"property": "mb_track_id"},
+    }
+
     def __init__(self, file_path: str, manager):
         self.file_path: str = file_path
         self.manager: TrackManager = manager
         self.title: str = None
         self.artist: List[str] = []
+        self.mb_track_id: str = None
+        self.mb_album_id: str = None
         self.album: str = None
         self.album_artist: str = None
         self.grouping: str = None
@@ -595,7 +605,7 @@ class TrackDetails:
     @staticmethod
     def get_id3_value(id3: id3.ID3, tag: str):
         """
-        Returns the correct value for an id3 tag
+        Returns the value for an id3 tag
         """
 
         # some tags commonly contain multiple values and need to be handled accordingly
@@ -615,6 +625,15 @@ class TrackDetails:
                     )
                 return (value.text)[0]
 
+    @staticmethod
+    def get_txxx_value(id3: id3.ID3, description: str):
+        """
+        Returns the value for an txxx frame id3 tag
+        """
+
+        txxx = id3.getall(f"TXXX:{description}")
+        return txxx[0].text[0] if txxx else None
+
     async def read_file_metadata(self, read_artist_json: bool = True) -> None:
         """
         Reads mp3 tags from a file
@@ -627,10 +646,15 @@ class TrackDetails:
             value = TrackDetails.get_id3_value(self.id3, tag)
             setattr(self, mapping["property"], value)
 
-        if read_artist_json:
+        for description, mapping in self.txxx_mappings.items():
+            value = TrackDetails.get_txxx_value(self.id3, description)
+            setattr(self, mapping["property"], value)
+
             # the artist_relations array is not a specific ID3 tag but is stored as text in the general purpose TXXX frame
-            txxx = self.id3.getall("TXXX:artist_relations_json")
-            self.artist_relations = txxx[0].text[0] if txxx else None
+        if read_artist_json:
+            self.artist_relations = TrackDetails.get_txxx_value(
+                self.id3, "artist_relations_json"
+            )
 
         await self.create_artist_objects()
 
@@ -1162,6 +1186,7 @@ class TrackManager:
             "Name": artist.custom_name,
             "OriginalName": artist.custom_original_name,
             "Include": artist.include,
+            "Type": artist.type,  # Added type property
         }
 
         async with httpx.AsyncClient() as client:
@@ -1274,6 +1299,7 @@ class TrackManager:
             "Name": artist.custom_name,
             "OriginalName": artist.custom_original_name,
             "Include": artist.include,
+            "Type": artist.type,  # Added type property
         }
 
         async with httpx.AsyncClient() as client:
