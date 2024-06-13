@@ -83,6 +83,8 @@ async def test_create_mbartist_objects_without_db_information(respx_mock):
     assert manager.artist_data[artist2.mbid].custom_original_name == artist2.name
     assert manager.artist_data[artist1.mbid].include == artist1.include
     assert manager.artist_data[artist2.mbid].include == artist2.include
+    assert manager.artist_data[artist1.mbid].type == artist1.type
+    assert manager.artist_data[artist2.mbid].type == artist2.type
 
 
 @pytest.mark.asyncio
@@ -105,6 +107,7 @@ async def test_create_mbartist_objects_with_db_information(respx_mock):
     artist1_expected = {
         "id": 239,
         "mbid": "mock-artist1-id",
+        "type": "Character",
         "custom_name": "Expected Lastname Artist1",
         "custom_original_name": "Expected Lastname Artist1 Original",
         "include": False,
@@ -126,6 +129,7 @@ async def test_create_mbartist_objects_with_db_information(respx_mock):
                 "id": artist1_expected["id"],
                 "mbid": artist1_expected["mbid"],
                 "name": artist1_expected["custom_name"],
+                "type": artist1_expected["type"],
                 "originalName": artist1_expected["custom_original_name"],
                 "include": artist1_expected["include"],
             },
@@ -146,6 +150,7 @@ async def test_create_mbartist_objects_with_db_information(respx_mock):
         == artist1_expected["custom_original_name"]
     )
     assert manager.artist_data[artist1.mbid].include == artist1_expected["include"]
+    assert manager.artist_data[artist1.mbid].type == artist1_expected["type"]
 
 
 @pytest.mark.asyncio
@@ -194,6 +199,7 @@ async def test_mbid_not_found_in_db_when_saving(respx_mock):
                 "id": server_artist_id,
                 "mbId": artist.mbid,
                 "name": artist.custom_name,
+                "type": artist.type,
                 "originalName": artist.custom_original_name,
                 "include": artist.include,
             },
@@ -219,6 +225,7 @@ async def test_mbid_not_found_in_db_when_saving(respx_mock):
     assert call_1_content == {
         "MbId": artist.mbid,
         "Name": artist.custom_name,
+        "Type": artist.type,
         "OriginalName": artist.custom_original_name,
         "Include": artist.include,
     }, f"Post body to update artist did not match expected object"
@@ -262,6 +269,7 @@ async def test_mbid_found_on_server_when_saving_data_identical(respx_mock):
             json={
                 "id": server_artist_id,
                 "mbId": artist.mbid,
+                "type": artist.type,
                 "name": server_artist_name,
                 "originalName": artist.custom_original_name,
                 "include": artist.include,
@@ -288,6 +296,7 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
     manager = TrackManager()
 
     server_artist_name = "ServerCustomName"
+    server_artist_type = "Character"
     server_artist_id = 35
 
     artist = MbArtistDetails(
@@ -320,6 +329,7 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
                 "id": server_artist_id,
                 "mbId": artist.mbid,
                 "name": server_artist_name,
+                "type": server_artist_type,
                 "originalName": artist.custom_original_name,
                 "include": artist.include,
             },
@@ -339,6 +349,7 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
                 "id": artist.id,
                 "mbId": artist.mbid,
                 "name": artist.custom_name,
+                "type": artist.type,
                 "originalName": artist.custom_original_name,
                 "include": artist.include,
             },
@@ -364,6 +375,7 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
     assert call_1_content == {
         "MbId": artist.mbid,
         "Name": artist.custom_name,
+        "Type": artist.type,
         "OriginalName": artist.custom_original_name,
         "Include": artist.include,
     }, f"Post body to update artist did not match expected object"
@@ -402,6 +414,7 @@ async def test_update_from_customization_sets_has_server_data(respx_mock):
                 "mbid": "mock-artist-id",
                 "name": "UpdatedMbArtist",
                 "originalName": "MbArtist",
+                "type": "Person",
                 "include": True,
             },
         )
@@ -1237,8 +1250,7 @@ async def test_reorder_nested_relations_in_from_dict2():
 @pytest.mark.asyncio
 @respx.mock(assert_all_mocked=True)
 async def test_read_file_metadata_read_artist_json_true_creates_simple_artist(
-    mock_id3_tags,
-    respx_mock
+    mock_id3_tags, respx_mock
 ):
     # Arrange
     reference_track = create_mock_trackdetails()

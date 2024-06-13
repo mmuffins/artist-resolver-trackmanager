@@ -481,7 +481,11 @@ async def test_get_mbartist_success(respx_mock):
         port=manager.api_port,
         host=manager.api_host,
         path=f"/api/mbartist/mbid/{mbid}",
-    ).mock(return_value=httpx.Response(200, json={"mbid": mbid, "name": "MbArtist"}))
+    ).mock(
+        return_value=httpx.Response(
+            200, json={"mbid": mbid, "name": "MbArtist", "type": "Person"}
+        )
+    )
 
     # Act
     result = await manager.get_mbartist(mbid)
@@ -489,6 +493,7 @@ async def test_get_mbartist_success(respx_mock):
     # Assert
     assert result["mbid"] == mbid
     assert result["name"] == "MbArtist"
+    assert result["type"] == "Person"
     assert (
         respx_mock.calls.call_count == 1
     ), "Expected one call to get the MB artist, but found a different number."

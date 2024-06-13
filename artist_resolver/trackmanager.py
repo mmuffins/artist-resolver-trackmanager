@@ -118,6 +118,7 @@ class MbArtistDetails:
         self.unedited_custom_name = self.custom_name
         self.custom_original_name = data["originalName"]
         self.id = data["id"]
+        self.type = data["type"]
         self.has_server_data = True
 
     @classmethod
@@ -1185,6 +1186,7 @@ class TrackManager:
             "Name": artist.custom_name,
             "OriginalName": artist.custom_original_name,
             "Include": artist.include,
+            "Type": artist.type,  # Added type property
         }
 
         async with httpx.AsyncClient() as client:
@@ -1297,6 +1299,7 @@ class TrackManager:
             "Name": artist.custom_name,
             "OriginalName": artist.custom_original_name,
             "Include": artist.include,
+            "Type": artist.type,  # Added type property
         }
 
         async with httpx.AsyncClient() as client:
