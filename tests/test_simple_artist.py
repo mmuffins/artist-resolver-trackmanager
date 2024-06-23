@@ -1009,3 +1009,35 @@ async def test_apply_custom_tag_values_handles_semicolon():
         "CustomArtist1",
         "CustomArtist2",
     ], "The artist names should be split by semicolon"
+
+
+@pytest.mark.asyncio
+async def test_application_handles_file_with_no_tags(respx_mock):
+    # Arrange
+    manager = TrackManager()
+    track = TrackDetails("/fake/path/file_with_no_tags.mp3", manager)
+    track.artist = []
+
+    respx_mock.route(
+        method="GET",
+        port__in=[manager.api_port],
+        host=manager.api_host,
+        path="/api/franchise",
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json=[
+                {"id": 1, "name": "_", "aliases": []},
+                {"id": 2, "name": "TestFranchise1", "aliases": []},
+            ],
+        )
+    )
+
+    # Act
+    await track.create_artist_objects()
+
+    # Assert
+    assert track.artist == [], "Expected no artists in track"
+    assert track.album_artist is None, "Expected no album artist in track"
+    assert track.title is None, "Expected no title in track"
+    assert track.album is None, "Expected no album in track"
