@@ -1009,3 +1009,25 @@ async def test_apply_custom_tag_values_handles_semicolon():
         "CustomArtist1",
         "CustomArtist2",
     ], "The artist names should be split by semicolon"
+
+
+@pytest.mark.asyncio
+async def test_application_handles_file_with_no_tags(mocker):
+    # Arrange
+    manager = TrackManager()
+    track = TrackDetails("/fake/path/file_with_no_tags.mp3", manager)
+    track.artist = []
+    
+    # Mock the ID3 instance to return None for any tag
+    mock_id3_instance = mocker.patch("mutagen.id3.ID3", autospec=True)
+    mock_id3_instance.return_value.get.side_effect = lambda x: None
+    mock_id3_instance.return_value.getall.side_effect = lambda x: []
+
+    # Act
+    await track.create_artist_objects()
+
+    # Assert
+    assert track.artist == [], "Expected no artists in track"
+    assert track.album_artist is None, "Expected no album artist in track"
+    assert track.title is None, "Expected no title in track"
+    assert track.album is None, "Expected no album in track"

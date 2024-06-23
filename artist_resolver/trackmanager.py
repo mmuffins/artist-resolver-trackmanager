@@ -371,6 +371,9 @@ class SimpleArtistDetails(MbArtistDetails):
         Deserializes a string containing a list of artists into artist objects
         """
 
+        if not artist_list:
+            return []
+
         split_artists = SimpleArtistDetails.split_artist(artist_list)
         simple_artist_list: List["SimpleArtistDetails"] = []
         for artist in split_artists:
@@ -655,6 +658,9 @@ class TrackDetails:
             self.artist_relations = TrackDetails.get_txxx_value(
                 self.id3, "artist_relations_json"
             )
+
+        if self.artist is None:
+            self.artist = []
 
         await self.create_artist_objects()
 
