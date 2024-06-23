@@ -1012,16 +1012,26 @@ async def test_apply_custom_tag_values_handles_semicolon():
 
 
 @pytest.mark.asyncio
-async def test_application_handles_file_with_no_tags(mocker):
+async def test_application_handles_file_with_no_tags(respx_mock):
     # Arrange
     manager = TrackManager()
     track = TrackDetails("/fake/path/file_with_no_tags.mp3", manager)
     track.artist = []
-    
-    # Mock the ID3 instance to return None for any tag
-    mock_id3_instance = mocker.patch("mutagen.id3.ID3", autospec=True)
-    mock_id3_instance.return_value.get.side_effect = lambda x: None
-    mock_id3_instance.return_value.getall.side_effect = lambda x: []
+
+    respx_mock.route(
+        method="GET",
+        port__in=[manager.api_port],
+        host=manager.api_host,
+        path="/api/franchise",
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json=[
+                {"id": 1, "name": "_", "aliases": []},
+                {"id": 2, "name": "TestFranchise1", "aliases": []},
+            ],
+        )
+    )
 
     # Act
     await track.create_artist_objects()
