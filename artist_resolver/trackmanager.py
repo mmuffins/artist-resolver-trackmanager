@@ -292,6 +292,17 @@ class MbArtistDetails:
             old_parent["parent_type"] = artist_entry["type"]
             artist_entry["parent_type"] = old_parent_type
 
+        # Not sure if this breaks anything, but it may resolve edge cases
+        if (
+            artist_entry["type"]
+            and artist_entry["type"].lower() == "person"
+            and artist_entry["parent_type"]
+            and artist_entry["parent_type"].lower() == "person"
+            and artist_entry["parent"] == artist_id
+        ):
+            artist_entry["parent"] = None
+            artist_entry["parent_type"] = None
+
     @staticmethod
     def reorder_json_cv(data: list[dict]) -> list[dict]:
         """
