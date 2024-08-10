@@ -233,6 +233,7 @@ def test_split_artist():
         "Character1 (CV: Artist5); Character2(CV.Artist6); (Character 3)",
         "Character4(CV.Artist7)",
         "(CV: Artist8)",
+        "Character5（CV：Artist9）",
     ]
 
     expected_result = [
@@ -248,6 +249,8 @@ def test_split_artist():
         {"type": "Person", "include": True, "name": "Artist7"},
         {"type": "Character", "include": False, "name": "Character4"},
         {"type": "Person", "include": True, "name": "Artist8"},
+        {"type": "Person", "include": True, "name": "Artist9"},
+        {"type": "Character", "include": False, "name": "Character5"},
     ]
 
     # Act
