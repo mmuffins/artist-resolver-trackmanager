@@ -491,6 +491,9 @@ class SimpleArtistDetails(MbArtistDetails):
         Process parts of the artist string, splitting by CV and character types.
         """
         for i in range(len(parts)):
+            parts[i] = parts[i].replace("（", "(")
+            parts[i] = parts[i].replace("）", ")")
+            parts[i] = parts[i].replace("：", ":")
             parts[i] = {"type": "Person", "include": True, "name": parts[i]}
 
         if len(parts) > 1:
