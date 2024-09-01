@@ -1,0 +1,59 @@
+  name: Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: 
+      - opened
+      - synchronize
+
+permissions:
+  contents:
+    - read 
+    - write
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }} # checkout the PR branch
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        check-latest: true
+
+    - name: Install dependencies
+      run: |
+        pip install setuptools
+
+    - name: Bump version
+      run: |
+        CURRENT_VERSION=$(grep version setup.py | sed "s/version=//;s/[', ]//g")
+        echo "Current version: $CURRENT_VERSION"
+        
+        MAJOR_MINOR=$(echo $CURRENT_VERSION | cut -d. -f1,2)
+        NEW_VERSION="${MAJOR_MINOR}.${{ github.run_number }}${{ github.run_attempt }}"
+        echo "New version: $NEW_VERSION"
+
+        # Update setup.py with the new version
+        sed -i "s/version='$CURRENT_VERSION'/version='$NEW_VERSION'/" setup.py
+    
+    - name: Commit and push new version
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add setup.py
+        git commit -m "Bump version to $NEW_VERSION"
+        git push origin ${{ github.head_ref }}
+
+    - name: Update PR title or description (optional)
+      run: |
+        gh pr edit ${{ github.event.pull_request.number }} --title "Bump version to $NEW_VERSION"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
