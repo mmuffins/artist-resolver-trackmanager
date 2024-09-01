@@ -32,7 +32,7 @@ jobs:
 
     - name: Bump version
       run: |
-        CURRENT_VERSION=$(grep version setup.py | sed "s/version=//;s/[', ]//g")
+        CURRENT_VERSION=$(grep -oP '(?<=version=")[^"]*' setup.py)
         echo "Current version: $CURRENT_VERSION"
         
         MAJOR_MINOR=$(echo $CURRENT_VERSION | cut -d. -f1,2)
@@ -40,7 +40,7 @@ jobs:
         echo "New version: $NEW_VERSION"
 
         # Update setup.py with the new version
-        sed -i "s/version='$CURRENT_VERSION'/version='$NEW_VERSION'/" setup.py
+        sed -i "s/version=['\"]$CURRENT_VERSION['\"]/version=\"$NEW_VERSION\"/" setup.py
         cat "${{ github.workspace }}/setup.py"
     
     - name: Commit and push new version
@@ -49,7 +49,7 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add "${{ github.workspace }}/setup.py"
         git commit -m "Bump version to $NEW_VERSION"
-        cat "${{ github.workspace }}/setup.py"
+        cat setup.py
         # git push origin ${{ github.head_ref }}
 
     - name: Update PR title or description (optional)
