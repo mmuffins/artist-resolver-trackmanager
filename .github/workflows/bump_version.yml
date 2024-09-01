@@ -41,6 +41,7 @@ jobs:
 
         # Update setup.py with the new version
         sed -i "s/version='$CURRENT_VERSION'/version='$NEW_VERSION'/" setup.py
+        cat "${{ github.workspace }}/setup.py"
     
     - name: Commit and push new version
       run: |
