@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   build:
@@ -50,8 +49,8 @@ jobs:
         git commit -m "Bump version to $NEW_VERSION"
         git push origin ${{ github.head_ref }}
 
-    - name: Update PR title or description (optional)
+    - name: Comment on the PR with the new version
       run: |
-        gh pr edit ${{ github.event.pull_request.number }} --title "Bump version to $NEW_VERSION"
+        gh pr comment ${{ github.event.pull_request.number }} --body "Bumped version in setup.py."
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
