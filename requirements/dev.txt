@@ -1,6 +1,6 @@
 -r common.txt
 flake8~=7.1.1
-pytest~=8.3.2
+pytest~=8.3.3
 pytest-asyncio~=0.24.0
 pytest-mock~=3.14.0
-setuptools~=74.0.0
+setuptools~=75.1.0
