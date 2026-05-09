@@ -2,24 +2,13 @@
 A gui application for the artist relation resolver api
 
 ## Installing dependencies
-Create a virtual environment
-```powershell
-python -m venv .venv
-./.venv/Scripts/Activate.ps1
-pip install -r ./requirements/dev.txt
-```
+Handled by uv, it is not needed to actively install dependencies
 
 Check for outdated libraries:
-```powershell
-pip list --outdated
-python.exe -m pip install --upgrade [packagename]
-pip freeze > requirements.txt
+```bash
+$ uv tree --outdated --depth 1
+$ uv add 'httpx~=0.28.0'
+#or 
+$ uv add --dev 'httpx~=0.28.0'
 ```
-When freezing requirements, make sture manually check the created file to only include top-level packages, and set all packages to match by '~=' instead of '==' to always install the lastest patch version of a package.
-
-## Cleanup
-To clean up environment when done
-```powershell
-deactivate
-Remove-Item -Path ./.venv/ -Recurse -Force
-```
+uv automatically upgrades versions matching the constraint, and will do so silently, they will not be listed in the outdated packages. `uv tree --outdated` only highlights packages that need to be upgraded manually.
