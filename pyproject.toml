@@ -1,0 +1,10 @@
+[project]
+name = "artist-resolver-trackmanager"
+version = "2.0.331"
+description = "Python library for the artist resolver api."
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+dependencies = [
+    "mutagen>=1.47.0",
+]
