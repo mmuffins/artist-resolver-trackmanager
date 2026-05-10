@@ -7,9 +7,6 @@ requires-python = ">=3.14"
 license = "MIT"
 authors = [{ name = "mmuffins" }]
 
-[project.urls]
-Homepage = "https://github.com/mmuffins/artist-resolver-trackmanager"
-
 dependencies = [
     "httpx~=0.28.0",
     "mutagen~=1.47.0",
@@ -35,3 +32,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["artist_resolver*"]
+
+[project.urls]
+repository = "https://egithub.com/mmuffins/artist-resolver-trackmanager"
