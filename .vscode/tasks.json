@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install deps (uv sync)",
+      "type": "shell",
+      "command": "uv sync",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test: pytest",
+      "type": "shell",
+      "command": "uv run pytest -q",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint: ruff (check)",
+      "type": "shell",
+      "command": "uv run ruff check .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Format: ruff (apply)",
+      "type": "shell",
+      "command": "uv run ruff format .",
+      "problemMatcher": []
+    },
+    {
+      "label": "All checks",
+      "dependsOn": [
+        "Install deps (uv sync)",
+        "Lint: ruff (check)",
+        "Test: pytest"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}
