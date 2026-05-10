@@ -19,3 +19,8 @@ dev = [
     "setuptools~=82.0.1",
     "ruff>=0.15.12",
 ]
+
+[tool.pytest.ini_options]
+addopts = ["-q", "--color=yes", "--maxfail=1"]
+testpaths = ["tests"]
+pythonpath = ["src"]

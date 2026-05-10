@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+    {
+      "name": "Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "TrackManager",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/artist_resolver/trackmanager.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Unit Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests"
+      ]
+    },
+  ]
+}
