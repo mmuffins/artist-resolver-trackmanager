@@ -503,7 +503,18 @@ cython_debug/
 #.idea/
 
 
-# vs code launch settings
-.vscode/launch.json
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
 
+# direnv
+.direnv
 
+# pre-commit
+.pre-commit-config.yaml
+
+.codex
+
+# ruff
+.ruff_cache
