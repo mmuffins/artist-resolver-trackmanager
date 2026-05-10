@@ -40,6 +40,7 @@ jobs:
         MAJOR_MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f1,2)
         NEW_VERSION="${MAJOR_MINOR}.${{ github.run_number }}${{ github.run_attempt }}"
         echo "New version: $NEW_VERSION"
+        echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_ENV"
 
         sed -i "s/^version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
         uv lock
@@ -55,6 +56,6 @@ jobs:
 
     - name: Comment on the PR with the new version
       run: |
-        gh pr comment ${{ github.event.pull_request.number }} --body "Bumped version in pyproject.py."
+        gh pr comment ${{ github.event.pull_request.number }} --body "Bumped version in pyproject.toml."
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
