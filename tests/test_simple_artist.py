@@ -144,26 +144,26 @@ async def test_create_artist_objects_with_db_information(respx_mock):
     # Assert
     assert (
         manager.artist_data[artist1.mbid].custom_name == artist1_expected["artist"]
-    ), f"Expected {artist1_expected['artist']}, got {manager.artist_data[artist1.mbid].custom_name}"
+    ), "Expected {artist1_expected['artist']}, got {manager.artist_data[artist1.mbid].custom_name}"
     assert (
         manager.artist_data[artist1.mbid].custom_original_name
         == artist1_expected["name"]
-    ), f"Expected {artist1_expected['name']}, got {manager.artist_data[artist1.mbid].custom_original_name}"
+    ), "Expected {artist1_expected['name']}, got {manager.artist_data[artist1.mbid].custom_original_name}"
     assert (
         manager.artist_data[artist1.mbid].id == artist1_expected["artistId"]
-    ), f"Expected {artist1_expected['artistId']}, got {manager.artist_data[artist1.mbid].id}"
+    ), "Expected {artist1_expected['artistId']}, got {manager.artist_data[artist1.mbid].id}"
     assert manager.artist_data[artist1.mbid].include == artist1.include
 
     assert (
         manager.artist_data[artist2.mbid].custom_name == artist2_expected["artist"]
-    ), f"Expected {artist2_expected['artist']}, got {manager.artist_data[artist2.mbid].custom_name}"
+    ), "Expected {artist2_expected['artist']}, got {manager.artist_data[artist2.mbid].custom_name}"
     assert (
         manager.artist_data[artist2.mbid].custom_original_name
         == artist2_expected["name"]
-    ), f"Expected {artist2_expected['name']}, got {manager.artist_data[artist2.mbid].custom_original_name}"
+    ), "Expected {artist2_expected['name']}, got {manager.artist_data[artist2.mbid].custom_original_name}"
     assert (
         manager.artist_data[artist2.mbid].id == artist2_expected["artistId"]
-    ), f"Expected {artist2_expected['artistId']}, got {manager.artist_data[artist2.mbid].id}"
+    ), "Expected {artist2_expected['artistId']}, got {manager.artist_data[artist2.mbid].id}"
     assert manager.artist_data[artist2.mbid].include == artist2.include
 
 
@@ -222,7 +222,7 @@ def test_generate_instance_hash():
 
     # Assert
     expected_hash = hashlib.sha256(unique_string.encode()).hexdigest()
-    assert result == expected_hash, f"Expected hash {expected_hash}, got {result}"
+    assert result == expected_hash, "Expected hash {expected_hash}, got {result}"
 
 
 def test_split_artist():
@@ -259,17 +259,17 @@ def test_split_artist():
     # Assert
     assert len(result) == len(
         expected_result
-    ), f"Expected {len(expected_result)} artists, got {len(result)}"
+    ), "Expected {len(expected_result)} artists, got {len(result)}"
     for i in range(len(result)):
         assert (
             result[i]["name"] == expected_result[i]["name"]
-        ), f"Name mismatch at index {i}: expected {expected_result[i]['name']}, got {result[i]['name']}"
+        ), "Name mismatch at index {i}: expected {expected_result[i]['name']}, got {result[i]['name']}"
         assert (
             result[i]["type"] == expected_result[i]["type"]
-        ), f"Type mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['type']}, got {result[i]['type']}"
+        ), "Type mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['type']}, got {result[i]['type']}"
         assert (
             result[i]["include"] == expected_result[i]["include"]
-        ), f"Include mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['include']}, got {result[i]['include']}"
+        ), "Include mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['include']}, got {result[i]['include']}"
 
 
 @pytest.mark.asyncio
@@ -327,17 +327,17 @@ async def test_split_artist_string_into_simple_artist_objects(respx_mock):
     # Assert
     assert len(manager.artist_data) == len(
         expected_simple_artists
-    ), f"Unexpected number of entries in artist_data"
+    ), "Unexpected number of entries in artist_data"
     assert len(simple_artists) == len(
         expected_simple_artists
-    ), f"Expected {len(expected_simple_artists)} simple artists, got {len(simple_artists)}"
+    ), "Expected {len(expected_simple_artists)} simple artists, got {len(simple_artists)}"
     for i, artist in enumerate(simple_artists):
         assert (
             artist.name == expected_simple_artists[i]["name"]
-        ), f"Name mismatch at index {i}: expected {expected_simple_artists[i]['name']}, got {artist.name}"
+        ), "Name mismatch at index {i}: expected {expected_simple_artists[i]['name']}, got {artist.name}"
         assert (
             artist.type == expected_simple_artists[i]["type"]
-        ), f"Type mismatch at index {i}: expected {expected_simple_artists[i]['type']}, got {artist.type}"
+        ), "Type mismatch at index {i}: expected {expected_simple_artists[i]['type']}, got {artist.type}"
 
 
 @pytest.mark.asyncio
@@ -405,7 +405,7 @@ async def test_artist_without_id_not_found_when_saving(respx_mock):
     call_1_content = json.loads(respx_mock.calls[1].request.content.decode())
     assert call_1_content == {
         "Name": artist.custom_name
-    }, f"Post body to create new artist did not match expected object"
+    }, "Post body to create new artist did not match expected object"
 
 
 @pytest.mark.asyncio
@@ -567,7 +567,7 @@ async def test_artist_with_id_not_found_when_saving(respx_mock):
     call_2_content = json.loads(respx_mock.calls[2].request.content.decode())
     assert call_2_content == {
         "Name": artist.custom_name
-    }, f"Post body to update artist did not match expected object"
+    }, "Post body to update artist did not match expected object"
 
 
 @pytest.mark.asyncio
@@ -768,7 +768,7 @@ async def test_alias_not_found_when_saving(respx_mock):
         "Name": artist.name,
         "artistid": artist.id,
         "franchiseid": artist.product_id,
-    }, f"Post body to create new alias did not match expected object"
+    }, "Post body to create new alias did not match expected object"
 
 
 @pytest.mark.asyncio
@@ -928,7 +928,7 @@ async def test_alias_found_when_saving_points_to_wrong_artist(respx_mock):
         "Name": artist.name,
         "artistid": artist.id,
         "franchiseid": artist.product_id,
-    }, f"Post body to create new alias did not match expected object"
+    }, "Post body to create new alias did not match expected object"
 
 
 @pytest.mark.asyncio
@@ -957,7 +957,7 @@ async def test_update_from_simple_artist_dict_sets_has_server_data(respx_mock):
         method="GET",
         port=manager.api_port,
         host=manager.api_host,
-        path=f"/api/alias",
+        path="/api/alias",
         params={"name": artist.name, "franchiseId": artist.product_id},
     ).mock(
         return_value=httpx.Response(

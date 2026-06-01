@@ -121,7 +121,7 @@ async def test_create_mbartist_objects_with_db_information(respx_mock):
         method="GET",
         port__in=[manager.api_port],
         host=manager.api_host,
-        path=f"/api/mbartist/mbid/mock-artist1-id",
+        path="/api/mbartist/mbid/mock-artist1-id",
     ).mock(
         return_value=httpx.Response(
             200,
@@ -191,7 +191,7 @@ async def test_mbid_not_found_in_db_when_saving(respx_mock):
         method="POST",
         port=manager.api_port,
         host=manager.api_host,
-        path=f"/api/mbartist",
+        path="/api/mbartist",
     ).mock(
         return_value=httpx.Response(
             200,
@@ -228,7 +228,7 @@ async def test_mbid_not_found_in_db_when_saving(respx_mock):
         "Type": artist.type,
         "OriginalName": artist.custom_original_name,
         "Include": artist.include,
-    }, f"Post body to update artist did not match expected object"
+    }, "Post body to update artist did not match expected object"
 
 
 @pytest.mark.asyncio
@@ -378,7 +378,7 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
         "Type": artist.type,
         "OriginalName": artist.custom_original_name,
         "Include": artist.include,
-    }, f"Post body to update artist did not match expected object"
+    }, "Post body to update artist did not match expected object"
 
 
 @pytest.mark.asyncio
@@ -774,7 +774,7 @@ async def test_parse_artist_json_with_nested_objects():
     flattened_data = MbArtistDetails.flatten_artist_json(sorted_data)
 
     # Assert
-    assert len(flattened_data) == 4, f"Unexpected number of entries"
+    assert len(flattened_data) == 4, "Unexpected number of entries"
 
     for i in range(len(expected)):
         expected_artist = expected[i]
@@ -876,7 +876,6 @@ async def test_parse_artist_json_with_nested_objects2():
                     "relations": [],
                 },
             ],
-            "joinphrase": "",
         }
     ]
 
@@ -953,7 +952,7 @@ async def test_parse_artist_json_with_nested_objects2():
     flattened_data = MbArtistDetails.flatten_artist_json(sorted_data)
 
     # Assert
-    assert len(flattened_data) == 5, f"Unexpected number of entries"
+    assert len(flattened_data) == 5, "Unexpected number of entries"
 
     for i in range(len(expected)):
         expected_artist = expected[i]
@@ -1032,7 +1031,6 @@ async def test_parse_artist_json_with_nested_objects3():
                     "relations": [],
                 },
             ],
-            "joinphrase": "",
         },
     ]
 
@@ -1085,7 +1083,7 @@ async def test_parse_artist_json_with_nested_objects3():
     flattened_data = MbArtistDetails.flatten_artist_json(sorted_data)
 
     # Assert
-    assert len(flattened_data) == 3, f"Unexpected number of entries"
+    assert len(flattened_data) == 3, "Unexpected number of entries"
 
     for i in range(len(expected)):
         expected_artist = expected[i]
