@@ -70,6 +70,6 @@ jobs:
       run: git push --set-upstream origin bump-project-version-${{ github.run_number }}-${{ github.run_attempt }}
 
     - name: create pull request
-      run: gh pr create -B main -H "nix-flake-update-${{ github.run_number }}-${{ github.run_attempt }}" --title 'Update nix flake' --body 'Updated nix flake' --label 'nix-flake-update'
+      run: gh pr create -B main -H "bump-project-version-${{ github.run_number }}-${{ github.run_attempt }}" --title 'Bump Project Version to ${{ github.run_number }}-${{ github.run_attempt }}' --body ' Project Version to ${{ github.run_number }}-${{ github.run_attempt }}' --label 'versionbump'
       env:
           GITHUB_TOKEN: ${{ secrets.PR_CREATION_TOKEN }}
