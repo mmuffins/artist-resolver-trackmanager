@@ -2,10 +2,9 @@ name: Bump Version
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: 
-      - opened
-      - synchronize
+  push:
+    branches: 
+      - main
 
 permissions:
   contents: write
@@ -19,7 +18,19 @@ jobs:
     steps:
     - uses: actions/checkout@v7
       with:
-        ref: ${{ github.head_ref }} # checkout the PR branch
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: configure git
+      run: |
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+        git config user.name 'github-actions[bot]'
+
+    - name: create branch
+      run: git checkout -b "bump-project-version-${{ github.run_number }}-${{ github.run_attempt }}"
+
+    - name: check git status
+      run: git status
 
     - name: Install uv
       uses: astral-sh/setup-uv@v8.1.0
@@ -45,17 +56,19 @@ jobs:
         sed -i "s/^version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
         uv lock
 
-    - name: Commit and push new version
+    - name: stage changes
       run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
         git add "${{ github.workspace }}/pyproject.toml"
         git add "${{ github.workspace }}/uv.lock"
-        git commit -m "Bump version to $NEW_VERSION"
-        git push origin ${{ github.head_ref }}
+        git status
+        
+    - name: commit changes
+      run: git commit -m "Bump version to $NEW_VERSION"
 
-    - name: Comment on the PR with the new version
-      run: |
-        gh pr comment ${{ github.event.pull_request.number }} --body "Bumped version in pyproject.toml."
+    - name: push branch
+      run: git push --set-upstream origin bump-project-version-${{ github.run_number }}-${{ github.run_attempt }}
+
+    - name: create pull request
+      run: gh pr create -B main -H "bump-project-version-${{ github.run_number }}-${{ github.run_attempt }}" --title 'Bump Project Version to ${{ github.run_number }}-${{ github.run_attempt }}' --body ' Project Version to ${{ github.run_number }}-${{ github.run_attempt }}' --label 'versionbump'
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PR_CREATION_TOKEN }}
