@@ -16,7 +16,7 @@ wheels = [
 
 [[package]]
 name = "artist-resolver-trackmanager"
-version = "2.0.391"
+version = "2.0.461"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
