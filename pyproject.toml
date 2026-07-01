@@ -9,7 +9,7 @@ authors = [{ name = "mmuffins" }]
 
 dependencies = [
     "httpx~=0.28.0",
-    "mutagen~=1.47.0",
+    "mutagen~=1.48.1",
     "respx~=0.23.1",
 ]
 
