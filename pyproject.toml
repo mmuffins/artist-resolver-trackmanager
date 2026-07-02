@@ -1,6 +1,6 @@
 [project]
 name = "artist-resolver-trackmanager"
-version = "2.0.611"
+version = "2.0.621"
 description = "Python library for the artist resolver api."
 readme = "README.md"
 requires-python = ">=3.14"
