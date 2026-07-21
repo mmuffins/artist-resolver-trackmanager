@@ -325,9 +325,9 @@ async def test_formatted_new_artist_multiple_artists():
     concatenated_string = track.formatted_new_artist
 
     # Assert
-    assert (
-        concatenated_string == "Custom Artist1; (Custom Character2)"
-    ), "Failed to concatenate artist details correctly"
+    assert concatenated_string == "Custom Artist1; (Custom Character2)", (
+        "Failed to concatenate artist details correctly"
+    )
 
 
 @pytest.mark.asyncio
@@ -341,9 +341,9 @@ async def test_formatted_new_artist_empty():
     concatenated_string = track.formatted_new_artist
 
     # Assert
-    assert (
-        concatenated_string == ""
-    ), "Failed to handle empty artist details list correctly"
+    assert concatenated_string == "", (
+        "Failed to handle empty artist details list correctly"
+    )
 
 
 @pytest.mark.asyncio
@@ -390,12 +390,12 @@ async def test_replace_original_title_overwrite_true():
     manager.replace_original_title(overwrite=True)
 
     # Assert
-    assert (
-        track1.original_title == "New Title 1"
-    ), "Failed to overwrite original_title when overwrite=True"
-    assert (
-        track2.original_title == "New Title 2"
-    ), "Failed to set original_title when overwrite=True and original_title is None"
+    assert track1.original_title == "New Title 1", (
+        "Failed to overwrite original_title when overwrite=True"
+    )
+    assert track2.original_title == "New Title 2", (
+        "Failed to set original_title when overwrite=True and original_title is None"
+    )
 
 
 @pytest.mark.asyncio
@@ -414,12 +414,12 @@ async def test_replace_original_title_overwrite_false():
     manager.replace_original_title(overwrite=False)
 
     # Assert
-    assert (
-        track1.original_title == "Old Title 1"
-    ), "Unexpectedly overwrote original_title when overwrite=False"
-    assert (
-        track2.original_title == "New Title 2"
-    ), "Failed to set original_title when overwrite=False and original_title is None"
+    assert track1.original_title == "Old Title 1", (
+        "Unexpectedly overwrote original_title when overwrite=False"
+    )
+    assert track2.original_title == "New Title 2", (
+        "Failed to set original_title when overwrite=False and original_title is None"
+    )
 
 
 @pytest.mark.asyncio
@@ -438,12 +438,12 @@ async def test_replace_original_artist_overwrite_true():
     manager.replace_original_artist(overwrite=True)
 
     # Assert
-    assert track1.original_artist == [
-        "New Artist 1"
-    ], "Failed to overwrite original_artist when overwrite=True"
-    assert track2.original_artist == [
-        "New Artist 2"
-    ], "Failed to set original_artist when overwrite=True and original_artist is None"
+    assert track1.original_artist == ["New Artist 1"], (
+        "Failed to overwrite original_artist when overwrite=True"
+    )
+    assert track2.original_artist == ["New Artist 2"], (
+        "Failed to set original_artist when overwrite=True and original_artist is None"
+    )
 
 
 @pytest.mark.asyncio
@@ -462,12 +462,12 @@ async def test_replace_original_artist_overwrite_false():
     manager.replace_original_artist(overwrite=False)
 
     # Assert
-    assert track1.original_artist == [
-        "Old Artist 1"
-    ], "Unexpectedly overwrote original_artist when overwrite=False"
-    assert track2.original_artist == [
-        "New Artist 2"
-    ], "Failed to set original_artist when overwrite=False and original_artist is None"
+    assert track1.original_artist == ["Old Artist 1"], (
+        "Unexpectedly overwrote original_artist when overwrite=False"
+    )
+    assert track2.original_artist == ["New Artist 2"], (
+        "Failed to set original_artist when overwrite=False and original_artist is None"
+    )
 
 
 @pytest.mark.asyncio
@@ -727,9 +727,9 @@ async def test_formatted_artist():
     formatted_artist = track.formatted_artist
 
     # Assert
-    assert (
-        formatted_artist == "Artist1; Artist2"
-    ), "Failed to concatenate artist names correctly"
+    assert formatted_artist == "Artist1; Artist2", (
+        "Failed to concatenate artist names correctly"
+    )
 
     # Test case with no artists
     track.artist = []
@@ -739,9 +739,9 @@ async def test_formatted_artist():
     # Test case with a single artist
     track.artist = ["Single Artist"]
     formatted_artist = track.formatted_artist
-    assert (
-        formatted_artist == "Single Artist"
-    ), "Failed to handle single artist correctly"
+    assert formatted_artist == "Single Artist", (
+        "Failed to handle single artist correctly"
+    )
 
 
 @pytest.mark.skip(reason="integration test, only called manually")
@@ -784,6 +784,6 @@ async def test_txxx_delete_artist_relations_frame():
         None,
     )
 
-    assert (
-        artist_relations_frame is None
-    ), "The artist_relations_json frame should be deleted"
+    assert artist_relations_frame is None, (
+        "The artist_relations_json frame should be deleted"
+    )

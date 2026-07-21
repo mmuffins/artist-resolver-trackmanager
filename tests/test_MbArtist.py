@@ -213,14 +213,14 @@ async def test_mbid_not_found_in_db_when_saving(respx_mock):
     assert respx_mock.calls.call_count == 2
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
 
     # post new artist
-    assert (
-        respx_mock.calls[1].request.method == "POST"
-    ), "Call to update artist was not of type UPDATE"
+    assert respx_mock.calls[1].request.method == "POST", (
+        "Call to update artist was not of type UPDATE"
+    )
     call_1_content = json.loads(respx_mock.calls[1].request.content.decode())
     assert call_1_content == {
         "MbId": artist.mbid,
@@ -284,9 +284,9 @@ async def test_mbid_found_on_server_when_saving_data_identical(respx_mock):
     assert respx_mock.calls.call_count == 1
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
 
 
 @pytest.mark.asyncio
@@ -363,14 +363,14 @@ async def test_mbid_found_on_server_when_saving_data_changed(respx_mock):
     assert respx_mock.calls.call_count == 2
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
 
     # post new artist
-    assert (
-        respx_mock.calls[1].request.method == "PUT"
-    ), "Call to update artist was not of type UPDATE"
+    assert respx_mock.calls[1].request.method == "PUT", (
+        "Call to update artist was not of type UPDATE"
+    )
     call_1_content = json.loads(respx_mock.calls[1].request.content.decode())
     assert call_1_content == {
         "MbId": artist.mbid,
@@ -445,27 +445,27 @@ async def test_formatted_artist():
 
     # Test case where custom_name is None
     artist.custom_name = None
-    assert (
-        artist.formatted_artist == "Original Artist"
-    ), "Failed when custom_name is None"
+    assert artist.formatted_artist == "Original Artist", (
+        "Failed when custom_name is None"
+    )
 
     # Test case where custom_name is empty
     artist.custom_name = ""
-    assert (
-        artist.formatted_artist == "Original Artist"
-    ), "Failed when custom_name is empty"
+    assert artist.formatted_artist == "Original Artist", (
+        "Failed when custom_name is empty"
+    )
 
     # Test case where type is "character"
     artist.type = "character"
     artist.custom_name = "Custom Character"
-    assert (
-        artist.formatted_artist == "(Custom Character)"
-    ), "Failed when type is 'character'"
+    assert artist.formatted_artist == "(Custom Character)", (
+        "Failed when type is 'character'"
+    )
 
     # Test case where type is "group"
     artist.type = "group"
     artist.custom_name = "Custom Group"
-    assert artist.formatted_artist == "(Custom Group)", "Failed when type is 'group'"
+    assert artist.formatted_artist == "Custom Group", "Failed when type is 'group'"
 
 
 @pytest.mark.asyncio
@@ -780,15 +780,15 @@ async def test_parse_artist_json_with_nested_objects():
         expected_artist = expected[i]
         actual_artist = flattened_data[i]
         assert actual_artist["id"] == expected_artist["id"], f"ID mismatch at index {i}"
-        assert (
-            actual_artist["name"] == expected_artist["name"]
-        ), f"name mismatch at index {i}"
-        assert (
-            actual_artist["sort_name"] == expected_artist["sort_name"]
-        ), f"sort_name mismatch at index {i}"
-        assert (
-            actual_artist["type"] == expected_artist["type"]
-        ), f"type mismatch at index {i}"
+        assert actual_artist["name"] == expected_artist["name"], (
+            f"name mismatch at index {i}"
+        )
+        assert actual_artist["sort_name"] == expected_artist["sort_name"], (
+            f"sort_name mismatch at index {i}"
+        )
+        assert actual_artist["type"] == expected_artist["type"], (
+            f"type mismatch at index {i}"
+        )
 
 
 @pytest.mark.asyncio
@@ -958,15 +958,15 @@ async def test_parse_artist_json_with_nested_objects2():
         expected_artist = expected[i]
         actual_artist = flattened_data[i]
         assert actual_artist["id"] == expected_artist["id"], f"ID mismatch at index {i}"
-        assert (
-            actual_artist["name"] == expected_artist["name"]
-        ), f"name mismatch at index {i}"
-        assert (
-            actual_artist["sort_name"] == expected_artist["sort_name"]
-        ), f"sort_name mismatch at index {i}"
-        assert (
-            actual_artist["type"] == expected_artist["type"]
-        ), f"type mismatch at index {i}"
+        assert actual_artist["name"] == expected_artist["name"], (
+            f"name mismatch at index {i}"
+        )
+        assert actual_artist["sort_name"] == expected_artist["sort_name"], (
+            f"sort_name mismatch at index {i}"
+        )
+        assert actual_artist["type"] == expected_artist["type"], (
+            f"type mismatch at index {i}"
+        )
 
 
 @pytest.mark.asyncio
@@ -1089,15 +1089,15 @@ async def test_parse_artist_json_with_nested_objects3():
         expected_artist = expected[i]
         actual_artist = flattened_data[i]
         assert actual_artist["id"] == expected_artist["id"], f"ID mismatch at index {i}"
-        assert (
-            actual_artist["name"] == expected_artist["name"]
-        ), f"name mismatch at index {i}"
-        assert (
-            actual_artist["sort_name"] == expected_artist["sort_name"]
-        ), f"sort_name mismatch at index {i}"
-        assert (
-            actual_artist["type"] == expected_artist["type"]
-        ), f"type mismatch at index {i}"
+        assert actual_artist["name"] == expected_artist["name"], (
+            f"name mismatch at index {i}"
+        )
+        assert actual_artist["sort_name"] == expected_artist["sort_name"], (
+            f"sort_name mismatch at index {i}"
+        )
+        assert actual_artist["type"] == expected_artist["type"], (
+            f"type mismatch at index {i}"
+        )
 
 
 @pytest.mark.asyncio
@@ -1135,12 +1135,12 @@ async def test_reorder_json_cv_artists():
     flattened_data = MbArtistDetails.flatten_artist_json(reordered_artists)
 
     # Assert
-    assert (
-        flattened_data[0] == "mock-d84a-9999-b45c-eef348e968fd"
-    ), "Expected Person to be first after reordering"
-    assert (
-        flattened_data[1] == "mock-e7a3-8888-a08c-3aa888f37bd5"
-    ), "Expected Character to be second after reordering"
+    assert flattened_data[0] == "mock-d84a-9999-b45c-eef348e968fd", (
+        "Expected Person to be first after reordering"
+    )
+    assert flattened_data[1] == "mock-e7a3-8888-a08c-3aa888f37bd5", (
+        "Expected Character to be second after reordering"
+    )
 
 
 @pytest.mark.asyncio
