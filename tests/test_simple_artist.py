@@ -144,26 +144,34 @@ async def test_create_artist_objects_with_db_information(respx_mock):
     # Assert
     assert (
         manager.artist_data[artist1.mbid].custom_name == artist1_expected["artist"]
-    ), "Expected {artist1_expected['artist']}, got {manager.artist_data[artist1.mbid].custom_name}"
+    ), (
+        "Expected {artist1_expected['artist']}, got {manager.artist_data[artist1.mbid].custom_name}"
+    )
     assert (
         manager.artist_data[artist1.mbid].custom_original_name
         == artist1_expected["name"]
-    ), "Expected {artist1_expected['name']}, got {manager.artist_data[artist1.mbid].custom_original_name}"
-    assert (
-        manager.artist_data[artist1.mbid].id == artist1_expected["artistId"]
-    ), "Expected {artist1_expected['artistId']}, got {manager.artist_data[artist1.mbid].id}"
+    ), (
+        "Expected {artist1_expected['name']}, got {manager.artist_data[artist1.mbid].custom_original_name}"
+    )
+    assert manager.artist_data[artist1.mbid].id == artist1_expected["artistId"], (
+        "Expected {artist1_expected['artistId']}, got {manager.artist_data[artist1.mbid].id}"
+    )
     assert manager.artist_data[artist1.mbid].include == artist1.include
 
     assert (
         manager.artist_data[artist2.mbid].custom_name == artist2_expected["artist"]
-    ), "Expected {artist2_expected['artist']}, got {manager.artist_data[artist2.mbid].custom_name}"
+    ), (
+        "Expected {artist2_expected['artist']}, got {manager.artist_data[artist2.mbid].custom_name}"
+    )
     assert (
         manager.artist_data[artist2.mbid].custom_original_name
         == artist2_expected["name"]
-    ), "Expected {artist2_expected['name']}, got {manager.artist_data[artist2.mbid].custom_original_name}"
-    assert (
-        manager.artist_data[artist2.mbid].id == artist2_expected["artistId"]
-    ), "Expected {artist2_expected['artistId']}, got {manager.artist_data[artist2.mbid].id}"
+    ), (
+        "Expected {artist2_expected['name']}, got {manager.artist_data[artist2.mbid].custom_original_name}"
+    )
+    assert manager.artist_data[artist2.mbid].id == artist2_expected["artistId"], (
+        "Expected {artist2_expected['artistId']}, got {manager.artist_data[artist2.mbid].id}"
+    )
     assert manager.artist_data[artist2.mbid].include == artist2.include
 
 
@@ -257,19 +265,19 @@ def test_split_artist():
     result = SimpleArtistDetails.split_artist(artist_list)
 
     # Assert
-    assert len(result) == len(
-        expected_result
-    ), "Expected {len(expected_result)} artists, got {len(result)}"
+    assert len(result) == len(expected_result), (
+        "Expected {len(expected_result)} artists, got {len(result)}"
+    )
     for i in range(len(result)):
-        assert (
-            result[i]["name"] == expected_result[i]["name"]
-        ), "Name mismatch at index {i}: expected {expected_result[i]['name']}, got {result[i]['name']}"
-        assert (
-            result[i]["type"] == expected_result[i]["type"]
-        ), "Type mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['type']}, got {result[i]['type']}"
-        assert (
-            result[i]["include"] == expected_result[i]["include"]
-        ), "Include mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['include']}, got {result[i]['include']}"
+        assert result[i]["name"] == expected_result[i]["name"], (
+            "Name mismatch at index {i}: expected {expected_result[i]['name']}, got {result[i]['name']}"
+        )
+        assert result[i]["type"] == expected_result[i]["type"], (
+            "Type mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['type']}, got {result[i]['type']}"
+        )
+        assert result[i]["include"] == expected_result[i]["include"], (
+            "Include mismatch at index {i} (`{result[i]['name']}`): expected {expected_result[i]['include']}, got {result[i]['include']}"
+        )
 
 
 @pytest.mark.asyncio
@@ -325,19 +333,19 @@ async def test_split_artist_string_into_simple_artist_objects(respx_mock):
     simple_artists = track.artist_details
 
     # Assert
-    assert len(manager.artist_data) == len(
-        expected_simple_artists
-    ), "Unexpected number of entries in artist_data"
-    assert len(simple_artists) == len(
-        expected_simple_artists
-    ), "Expected {len(expected_simple_artists)} simple artists, got {len(simple_artists)}"
+    assert len(manager.artist_data) == len(expected_simple_artists), (
+        "Unexpected number of entries in artist_data"
+    )
+    assert len(simple_artists) == len(expected_simple_artists), (
+        "Expected {len(expected_simple_artists)} simple artists, got {len(simple_artists)}"
+    )
     for i, artist in enumerate(simple_artists):
-        assert (
-            artist.name == expected_simple_artists[i]["name"]
-        ), "Name mismatch at index {i}: expected {expected_simple_artists[i]['name']}, got {artist.name}"
-        assert (
-            artist.type == expected_simple_artists[i]["type"]
-        ), "Type mismatch at index {i}: expected {expected_simple_artists[i]['type']}, got {artist.type}"
+        assert artist.name == expected_simple_artists[i]["name"], (
+            "Name mismatch at index {i}: expected {expected_simple_artists[i]['name']}, got {artist.name}"
+        )
+        assert artist.type == expected_simple_artists[i]["type"], (
+            "Type mismatch at index {i}: expected {expected_simple_artists[i]['type']}, got {artist.type}"
+        )
 
 
 @pytest.mark.asyncio
@@ -391,21 +399,22 @@ async def test_artist_without_id_not_found_when_saving(respx_mock):
     # Assert
     assert respx_mock.calls.call_count == 2
     # verify existing artists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify artist exist was not of type GET"
-    respx_mock.calls[0].request.url.params[
-        "name"
-    ] == artist.custom_name, "Call to verify artist did not have expected parameters"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify artist exist was not of type GET"
+    )
+    (
+        respx_mock.calls[0].request.url.params["name"] == artist.custom_name,
+        "Call to verify artist did not have expected parameters",
+    )
 
     # post new artist
-    assert (
-        respx_mock.calls[1].request.method == "POST"
-    ), "Call to create new artist was not of type POST"
+    assert respx_mock.calls[1].request.method == "POST", (
+        "Call to create new artist was not of type POST"
+    )
     call_1_content = json.loads(respx_mock.calls[1].request.content.decode())
-    assert call_1_content == {
-        "Name": artist.custom_name
-    }, "Post body to create new artist did not match expected object"
+    assert call_1_content == {"Name": artist.custom_name}, (
+        "Post body to create new artist did not match expected object"
+    )
 
 
 @pytest.mark.asyncio
@@ -457,12 +466,13 @@ async def test_artist_without_id_found_by_name_when_saving(respx_mock):
     # Assert
     assert respx_mock.calls.call_count == 1
     # verify existing artists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify artist exist was not of type GET"
-    respx_mock.calls[0].request.url.params[
-        "name"
-    ] == artist.custom_name, "Call to verify artist did not have expected parameters"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify artist exist was not of type GET"
+    )
+    (
+        respx_mock.calls[0].request.url.params["name"] == artist.custom_name,
+        "Call to verify artist did not have expected parameters",
+    )
 
 
 @pytest.mark.asyncio
@@ -541,33 +551,33 @@ async def test_artist_with_id_not_found_when_saving(respx_mock):
     await manager.send_simple_artist_changes_to_db(artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 3
-    ), "Expected only two calls to check if artist and alias exist."
+    assert respx_mock.calls.call_count == 3, (
+        "Expected only two calls to check if artist and alias exist."
+    )
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
-    assert (
-        respx_mock.calls[0].request.url.params["name"] == artist.custom_name
-    ), "Call to verify if an artist exist used an unexpected parameter"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
+    assert respx_mock.calls[0].request.url.params["name"] == artist.custom_name, (
+        "Call to verify if an artist exist used an unexpected parameter"
+    )
 
-    assert (
-        respx_mock.calls[1].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
-    assert respx_mock.calls[1].request.url.params["id"] == str(
-        artist.id
-    ), "Call to verify if an artist exist used an unexpected parameter"
+    assert respx_mock.calls[1].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
+    assert respx_mock.calls[1].request.url.params["id"] == str(artist.id), (
+        "Call to verify if an artist exist used an unexpected parameter"
+    )
 
     # post new artist
-    assert (
-        respx_mock.calls[2].request.method == "PUT"
-    ), "Call to update artist was not of type UPDATE"
+    assert respx_mock.calls[2].request.method == "PUT", (
+        "Call to update artist was not of type UPDATE"
+    )
     call_2_content = json.loads(respx_mock.calls[2].request.content.decode())
-    assert call_2_content == {
-        "Name": artist.custom_name
-    }, "Post body to update artist did not match expected object"
+    assert call_2_content == {"Name": artist.custom_name}, (
+        "Post body to update artist did not match expected object"
+    )
 
 
 @pytest.mark.asyncio
@@ -627,17 +637,17 @@ async def test_artist_with_id_found_by_id_when_saving(respx_mock):
     await manager.send_simple_artist_changes_to_db(artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 2
-    ), "Expected only two calls to check if artist and alias exist."
+    assert respx_mock.calls.call_count == 2, (
+        "Expected only two calls to check if artist and alias exist."
+    )
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
-    assert (
-        respx_mock.calls[0].request.url.params["name"] == artist.custom_name
-    ), "Call to verify if an artist exist used an unexpected parameter"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
+    assert respx_mock.calls[0].request.url.params["name"] == artist.custom_name, (
+        "Call to verify if an artist exist used an unexpected parameter"
+    )
 
 
 @pytest.mark.asyncio
@@ -685,17 +695,17 @@ async def test_artist_with_id_found_by_name_when_saving(respx_mock):
     await manager.send_simple_artist_changes_to_db(artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected only two calls to check if artist and alias exist."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected only two calls to check if artist and alias exist."
+    )
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
-    assert (
-        respx_mock.calls[0].request.url.params["name"] == artist.custom_name
-    ), "Call to verify if an artist exist used an unexpected parameter"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
+    assert respx_mock.calls[0].request.url.params["name"] == artist.custom_name, (
+        "Call to verify if an artist exist used an unexpected parameter"
+    )
 
 
 @pytest.mark.asyncio
@@ -755,14 +765,14 @@ async def test_alias_not_found_when_saving(respx_mock):
     assert respx_mock.calls.call_count == 2
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
 
     # post new alias
-    assert (
-        respx_mock.calls[1].request.method == "POST"
-    ), "Call to create new alias was not of type POST"
+    assert respx_mock.calls[1].request.method == "POST", (
+        "Call to create new alias was not of type POST"
+    )
     call_1_content = json.loads(respx_mock.calls[1].request.content.decode())
     assert call_1_content == {
         "Name": artist.name,
@@ -826,9 +836,9 @@ async def test_alias_found_when_saving_points_to_correct_artist(respx_mock):
     assert respx_mock.calls.call_count == 1
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
 
 
 @pytest.mark.asyncio
@@ -910,19 +920,19 @@ async def test_alias_found_when_saving_points_to_wrong_artist(respx_mock):
     assert respx_mock.calls.call_count == 3
 
     # verify if artist exists
-    assert (
-        respx_mock.calls[0].request.method == "GET"
-    ), "Call to verify if an artist exist was not of type GET"
+    assert respx_mock.calls[0].request.method == "GET", (
+        "Call to verify if an artist exist was not of type GET"
+    )
 
     # delete old alias
-    assert (
-        respx_mock.calls[1].request.method == "DELETE"
-    ), "Call to delete new alias was not of type DELETE"
+    assert respx_mock.calls[1].request.method == "DELETE", (
+        "Call to delete new alias was not of type DELETE"
+    )
 
     # post new alias
-    assert (
-        respx_mock.calls[2].request.method == "POST"
-    ), "Call to create new alias was not of type POST"
+    assert respx_mock.calls[2].request.method == "POST", (
+        "Call to create new alias was not of type POST"
+    )
     call_2_content = json.loads(respx_mock.calls[2].request.content.decode())
     assert call_2_content == {
         "Name": artist.name,

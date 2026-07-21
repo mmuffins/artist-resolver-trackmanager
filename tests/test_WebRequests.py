@@ -42,9 +42,9 @@ async def test_post_simple_artist_success(respx_mock):
     await manager.post_simple_artist(artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to post the artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to post the artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -106,9 +106,9 @@ async def test_post_simple_artist_alias_success(respx_mock):
     await manager.post_simple_artist_alias(artist_id, name, franchise_id)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to post the artist alias, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to post the artist alias, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -148,9 +148,9 @@ async def test_delete_simple_artist_alias_success(respx_mock):
     await manager.delete_simple_artist_alias(alias_id)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to delete the alias, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to delete the alias, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -235,9 +235,9 @@ async def test_update_simple_artist_success(respx_mock):
     await manager.update_simple_artist(artist_id, artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to update the artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to update the artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -298,9 +298,9 @@ async def test_get_simple_artist_success(respx_mock):
     # Assert
     assert result["id"] == artist_id
     assert result["name"] == name
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to get the artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to get the artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -324,9 +324,9 @@ async def test_get_simple_artist_not_found(respx_mock):
 
     # Assert
     assert result is None
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to get the artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to get the artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -365,9 +365,9 @@ async def test_get_simple_artist_alias_success(respx_mock):
     # Assert
     assert result[0]["name"] == name
     assert result[0]["franchiseId"] == franchise_id
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to get the artist alias, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to get the artist alias, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -391,9 +391,9 @@ async def test_get_simple_artist_alias_not_found(respx_mock):
 
     # Assert
     assert result is None
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to get the artist alias, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to get the artist alias, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -434,9 +434,9 @@ async def test_update_mbartist_success(respx_mock):
     await manager.update_mbartist(artist_id, artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to update the MB artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to update the MB artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -494,9 +494,9 @@ async def test_get_mbartist_success(respx_mock):
     assert result["mbid"] == mbid
     assert result["name"] == "MbArtist"
     assert result["type"] == "Person"
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to get the MB artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to get the MB artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -518,9 +518,9 @@ async def test_get_mbartist_not_found(respx_mock):
 
     # Assert
     assert result is None
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to get the MB artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to get the MB artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
@@ -554,9 +554,9 @@ async def test_post_mbartist_success(respx_mock):
     await manager.post_mbartist(artist)
 
     # Assert
-    assert (
-        respx_mock.calls.call_count == 1
-    ), "Expected one call to post the MB artist, but found a different number."
+    assert respx_mock.calls.call_count == 1, (
+        "Expected one call to post the MB artist, but found a different number."
+    )
 
 
 @pytest.mark.asyncio
