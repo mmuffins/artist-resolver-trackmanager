@@ -465,7 +465,7 @@ async def test_formatted_artist():
     # Test case where type is "group"
     artist.type = "group"
     artist.custom_name = "Custom Group"
-    assert artist.formatted_artist == "(Custom Group)", "Failed when type is 'group'"
+    assert artist.formatted_artist == "Custom Group", "Failed when type is 'group'"
 
 
 @pytest.mark.asyncio
