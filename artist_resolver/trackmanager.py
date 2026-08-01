@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import re
+from typing import ClassVar
 from urllib.parse import urlencode
 
 import httpx
@@ -64,7 +65,7 @@ class MbArtistDetails:
         type_id: str,
         joinphrase: str | None,
         include: bool = True,
-        id: int = None,
+        id: int | None = None,
     ):
         self.include: bool = include
         self.name = name
@@ -205,8 +206,8 @@ class MbArtistDetails:
     def build_artist_relation_cache(
         data: list[dict],
         artist_cache,
-        parent_id: str = None,
-        parent_type: str = None,
+        parent_id: str | None = None,
+        parent_type: str | None = None,
     ) -> dict:
         """
         Reorders the artist list based on the joinphrase property.
@@ -341,7 +342,7 @@ class SimpleArtistDetails(MbArtistDetails):
         joinphrase: str | None,
         include: bool = True,
         product: str = "",
-        product_id: int = None,
+        product_id: int | None = None,
         id: int = -1,
     ):
         super().__init__(
@@ -550,7 +551,7 @@ class SimpleArtistDetails(MbArtistDetails):
 
 
 class TrackDetails:
-    tag_mappings = {
+    tag_mappings: ClassVar[dict] = {
         "TIT2": {"property": "title", "frame": id3.TIT2},
         "TPE1": {"property": "artist", "frame": id3.TPE1},
         "TALB": {"property": "album", "frame": id3.TALB},
@@ -561,7 +562,7 @@ class TrackDetails:
         "TPE3": {"property": "original_title", "frame": id3.TPE3},
     }
 
-    txxx_mappings = {
+    txxx_mappings: ClassVar[dict] = {
         "MusicBrainz Album Id": {"property": "mb_album_id"},
         "MusicBrainz Release Track Id": {"property": "mb_track_id"},
     }
@@ -767,7 +768,7 @@ class TrackManager:
     API_PORT = 23409
     API_DOMAIN = "localhost"
 
-    def __init__(self, host: str = None, port: str = None):
+    def __init__(self, host: str | None = None, port: str | None = None):
         self.tracks: list[TrackDetails] = []
         self.artist_data: dict[MbArtistDetails] = {}
         self.api_host = host if host is not None else self.API_DOMAIN
@@ -790,8 +791,8 @@ class TrackManager:
 
         # Create a set of all artist MBIDs that are still referenced by remaining tracks
         referenced_artist_mbids = set()
-        for track in self.tracks:
-            for artist in track.artist_details:
+        for remaining_track in self.tracks:
+            for artist in remaining_track.artist_details:
                 referenced_artist_mbids.add(artist.mbid)
 
         # Remove artists from artist_data if they are no longer referenced by any tracks
@@ -1109,7 +1110,7 @@ class TrackManager:
             else:
                 return None
 
-    async def get_simple_artist_franchise(self, name: str = None) -> dict:
+    async def get_simple_artist_franchise(self, name: str | None = None) -> dict:
         """
         Gets franchise/artist from the db
         """
@@ -1162,7 +1163,7 @@ class TrackManager:
                 return None
 
     async def get_simple_artist_alias(
-        self, name: str = None, franchiseId: int = None
+        self, name: str | None = None, franchiseId: int | None = None
     ) -> dict:
         """
         Gets all aliases of a simple artist from the db
@@ -1374,7 +1375,7 @@ class TrackManager:
                 response = await client.get(f"{endpoint}")
                 if response.status_code == 200:
                     return True
-            except Exception:
+            except httpx.HTTPError:
                 return False
 
             return False
