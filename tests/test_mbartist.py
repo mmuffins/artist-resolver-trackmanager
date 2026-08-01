@@ -1,13 +1,15 @@
-import pytest
-import httpx
-import respx
 import json
+
+import httpx
+import pytest
+import respx
 from mutagen.id3 import TXXX
+
 from artist_resolver.trackmanager import (
     MbArtistDetails,
+    SimpleArtistDetails,
     TrackDetails,
     TrackManager,
-    SimpleArtistDetails,
 )
 
 

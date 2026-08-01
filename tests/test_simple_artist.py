@@ -1,12 +1,14 @@
 import hashlib
-import pytest
-import httpx
-import respx
 import json
+
+import httpx
+import pytest
+import respx
+
 from artist_resolver.trackmanager import (
     SimpleArtistDetails,
-    TrackManager,
     TrackDetails,
+    TrackManager,
 )
 
 

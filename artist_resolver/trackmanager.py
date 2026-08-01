@@ -1,12 +1,32 @@
+import asyncio
 import hashlib
+import json
 import os
 import re
-import json
-import httpx
-import asyncio
+from typing import ClassVar
 from urllib.parse import urlencode
-from typing import List, Optional
+
+import httpx
 from mutagen import id3
+
+
+class TrackManagerError(Exception):
+    """Base exception for TrackManager errors."""
+
+
+class TrackManagerHTTPError(TrackManagerError):
+    def __init__(self, message: str, response: httpx.Response):
+        super().__init__(message)
+        self.response = response
+        self.status_code = response.status_code
+
+
+class TrackManagerConflictError(TrackManagerHTTPError):
+    """Raised when the TrackManager API reports a resource conflict."""
+
+
+class TrackManagerNotFoundError(TrackManagerHTTPError):
+    """Raised when the TrackManager API cannot find a required resource."""
 
 
 class Alias:
@@ -14,9 +34,9 @@ class Alias:
         self,
         name: str,
         type: str,
-        locale: Optional[str],
-        begin: Optional[str],
-        end: Optional[str],
+        locale: str | None,
+        begin: str | None,
+        end: str | None,
         type_id: str,
         ended: bool,
         sort_name: str,
@@ -60,11 +80,11 @@ class MbArtistDetails:
         type: str,
         disambiguation: str,
         sort_name: str,
-        aliases: List[Alias],
+        aliases: list[Alias],
         type_id: str,
-        joinphrase: Optional[str],
+        joinphrase: str | None,
         include: bool = True,
-        id: int = None,
+        id: int | None = None,
     ):
         self.include: bool = include
         self.name = name
@@ -122,7 +142,7 @@ class MbArtistDetails:
         self.has_server_data = True
 
     @classmethod
-    def from_dict(cls, data: dict, artist_list: list["MbArtistDetails"]):
+    def from_dict(cls, data: dict, artist_list: list[MbArtistDetails]):
         """
         Creates artist objects based on the provided dictionary object
         """
@@ -149,7 +169,7 @@ class MbArtistDetails:
             artist_list.append(artist)
 
     @staticmethod
-    def parse_json(json_str: str) -> list["MbArtistDetails"]:
+    def parse_json(json_str: str) -> list[MbArtistDetails]:
         """
         Deserializes an artist_json string into multiple artist objects
         """
@@ -163,7 +183,6 @@ class MbArtistDetails:
         artist_list: list[MbArtistDetails] = []
         for item in flattened_data:
             MbArtistDetails.from_dict(item, artist_list)
-            pass
 
         return artist_list
 
@@ -177,7 +196,7 @@ class MbArtistDetails:
 
         def recurse(artist):
             result.append(artist)
-            if "relations" in artist and artist["relations"]:
+            if isinstance(artist, dict) and artist.get("relations"):
                 for relation in artist["relations"]:
                     recurse(relation)
 
@@ -206,8 +225,8 @@ class MbArtistDetails:
     def build_artist_relation_cache(
         data: list[dict],
         artist_cache,
-        parent_id: str = None,
-        parent_type: str = None,
+        parent_id: str | None = None,
+        parent_type: str | None = None,
     ) -> dict:
         """
         Reorders the artist list based on the joinphrase property.
@@ -337,12 +356,12 @@ class SimpleArtistDetails(MbArtistDetails):
         type: str,
         disambiguation: str,
         sort_name: str,
-        aliases: List[Alias],
+        aliases: list[Alias],
         type_id: str,
-        joinphrase: Optional[str],
+        joinphrase: str | None,
         include: bool = True,
         product: str = "",
-        product_id: int = None,
+        product_id: int | None = None,
         id: int = -1,
     ):
         super().__init__(
@@ -377,7 +396,7 @@ class SimpleArtistDetails(MbArtistDetails):
     @staticmethod
     def parse_simple_artist(
         artist_list: list[str], product: str, product_id: int
-    ) -> list["SimpleArtistDetails"]:
+    ) -> list[SimpleArtistDetails]:
         """
         Deserializes a string containing a list of artists into artist objects
         """
@@ -386,7 +405,7 @@ class SimpleArtistDetails(MbArtistDetails):
             return []
 
         split_artists = SimpleArtistDetails.split_artist(artist_list)
-        simple_artist_list: List["SimpleArtistDetails"] = []
+        simple_artist_list: list[SimpleArtistDetails] = []
         for artist in split_artists:
             simple_artist_list.append(
                 SimpleArtistDetails.from_simple_artist(artist, product, product_id)
@@ -551,7 +570,7 @@ class SimpleArtistDetails(MbArtistDetails):
 
 
 class TrackDetails:
-    tag_mappings = {
+    tag_mappings: ClassVar[dict] = {
         "TIT2": {"property": "title", "frame": id3.TIT2},
         "TPE1": {"property": "artist", "frame": id3.TPE1},
         "TALB": {"property": "album", "frame": id3.TALB},
@@ -562,7 +581,7 @@ class TrackDetails:
         "TPE3": {"property": "original_title", "frame": id3.TPE3},
     }
 
-    txxx_mappings = {
+    txxx_mappings: ClassVar[dict] = {
         "MusicBrainz Album Id": {"property": "mb_album_id"},
         "MusicBrainz Release Track Id": {"property": "mb_track_id"},
     }
@@ -571,19 +590,19 @@ class TrackDetails:
         self.file_path: str = file_path
         self.manager: TrackManager = manager
         self.title: str = None
-        self.artist: List[str] = []
+        self.artist: list[str] = []
         self.mb_track_id: str = None
         self.mb_album_id: str = None
         self.album: str = None
         self.album_artist: str = None
         self.grouping: str = None
         self.original_album: str = None
-        self.original_artist: List[str] = []
+        self.original_artist: list[str] = []
         self.original_title: str = None
         self.product: str = None
         self.artist_relations = None
         self.update_file: bool = True
-        self.artist_details: List[MbArtistDetails] = []
+        self.artist_details: list[MbArtistDetails] = []
 
     def __str__(self):
         return f"{self.title}"
@@ -768,7 +787,7 @@ class TrackManager:
     API_PORT = 23409
     API_DOMAIN = "localhost"
 
-    def __init__(self, host: str = None, port: str = None):
+    def __init__(self, host: str | None = None, port: str | None = None):
         self.tracks: list[TrackDetails] = []
         self.artist_data: dict[MbArtistDetails] = {}
         self.api_host = host if host is not None else self.API_DOMAIN
@@ -791,8 +810,8 @@ class TrackManager:
 
         # Create a set of all artist MBIDs that are still referenced by remaining tracks
         referenced_artist_mbids = set()
-        for track in self.tracks:
-            for artist in track.artist_details:
+        for remaining_track in self.tracks:
+            for artist in remaining_track.artist_details:
                 referenced_artist_mbids.add(artist.mbid)
 
         # Remove artists from artist_data if they are no longer referenced by any tracks
@@ -938,7 +957,7 @@ class TrackManager:
         """
 
         artist_details = MbArtistDetails.parse_json(artist_relations_json)
-        returnObj: List[MbArtistDetails] = []
+        returnObj: list[MbArtistDetails] = []
         for artist in artist_details:
             if artist.mbid not in self.artist_data:
                 self.artist_data[artist.mbid] = artist
@@ -1092,8 +1111,9 @@ class TrackManager:
                 case 404:
                     return None
                 case _:
-                    raise Exception(
-                        f"Failed to fetch artist data for MBID {mbid}: {response.status_code}"
+                    raise TrackManagerHTTPError(
+                        f"Failed to fetch artist data for MBID {mbid}: {response.status_code}",
+                        response,
                     )
 
     async def list_simple_artist_franchise(self) -> dict:
@@ -1110,7 +1130,7 @@ class TrackManager:
             else:
                 return None
 
-    async def get_simple_artist_franchise(self, name: str = None) -> dict:
+    async def get_simple_artist_franchise(self, name: str | None = None) -> dict:
         """
         Gets franchise/artist from the db
         """
@@ -1163,7 +1183,7 @@ class TrackManager:
                 return None
 
     async def get_simple_artist_alias(
-        self, name: str = None, franchiseId: int = None
+        self, name: str | None = None, franchiseId: int | None = None
     ) -> dict:
         """
         Gets all aliases of a simple artist from the db
@@ -1217,12 +1237,14 @@ class TrackManager:
 
             match response.status_code:
                 case 409:
-                    raise Exception(
-                        f"Artist with MBID {artist.mbid} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerConflictError(
+                        f"Artist with MBID {artist.mbid} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to create artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to create artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def post_simple_artist(self, artist: SimpleArtistDetails) -> dict:
@@ -1244,12 +1266,14 @@ class TrackManager:
 
             match response.status_code:
                 case 409:
-                    raise Exception(
-                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerConflictError(
+                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def post_simple_artist_alias(
@@ -1275,12 +1299,14 @@ class TrackManager:
 
             match response.status_code:
                 case 409:
-                    raise Exception(
-                        f"Alias with name {name} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerConflictError(
+                        f"Alias with name {name} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to create alias for name {name}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to create alias for name {name}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def delete_simple_artist_alias(self, id: int) -> None:
@@ -1297,12 +1323,14 @@ class TrackManager:
                 case 200:
                     return
                 case 404:
-                    raise Exception(
-                        f"Alias with ID {id} was not found: {response.status_code}"
+                    raise TrackManagerNotFoundError(
+                        f"Alias with ID {id} was not found: {response.status_code}",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"An error occurred when deleting alias with ID {id}: {response.status_code}"
+                    raise TrackManagerHTTPError(
+                        f"An error occurred when deleting alias with ID {id}: {response.status_code}",
+                        response,
                     )
 
     async def update_mbartist(self, id: int, artist: MbArtistDetails) -> None:
@@ -1330,12 +1358,14 @@ class TrackManager:
 
             match response.status_code:
                 case 404:
-                    raise Exception(
-                        f"Could not find artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerNotFoundError(
+                        f"Could not find artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def update_simple_artist(self, id: int, artist: SimpleArtistDetails) -> None:
@@ -1355,12 +1385,14 @@ class TrackManager:
 
             match response.status_code:
                 case 404:
-                    raise Exception(
-                        f"Could not find artist with MBID {artist.id}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerNotFoundError(
+                        f"Could not find artist with MBID {artist.id}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def get_server_health(self) -> bool:
@@ -1375,7 +1407,7 @@ class TrackManager:
                 response = await client.get(f"{endpoint}")
                 if response.status_code == 200:
                     return True
-            except Exception:
+            except httpx.HTTPError:
                 return False
 
             return False

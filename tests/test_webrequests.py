@@ -1,10 +1,14 @@
-import pytest
 import httpx
+import pytest
 import respx
+
 from artist_resolver.trackmanager import (
-    TrackManager,
     MbArtistDetails,
     SimpleArtistDetails,
+    TrackManager,
+    TrackManagerConflictError,
+    TrackManagerHTTPError,
+    TrackManagerNotFoundError,
 )
 
 
@@ -71,7 +75,7 @@ async def test_post_simple_artist_conflict(respx_mock):
     ).mock(return_value=httpx.Response(409))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerConflictError) as excinfo:
         await manager.post_simple_artist(artist)
     assert "Failed to post artist data" in str(excinfo.value)
 
@@ -125,7 +129,7 @@ async def test_post_simple_artist_alias_conflict(respx_mock):
     ).mock(return_value=httpx.Response(409))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerConflictError) as excinfo:
         await manager.post_simple_artist_alias(artist_id, name, franchise_id)
     assert "Alias with name" in str(excinfo.value)
 
@@ -168,7 +172,7 @@ async def test_delete_simple_artist_alias_not_found(respx_mock):
     ).mock(return_value=httpx.Response(404))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerNotFoundError) as excinfo:
         await manager.delete_simple_artist_alias(alias_id)
     assert f"Alias with ID {alias_id} was not found" in str(excinfo.value)
 
@@ -188,7 +192,7 @@ async def test_delete_simple_artist_alias_server_error(respx_mock):
     ).mock(return_value=httpx.Response(500))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerHTTPError) as excinfo:
         await manager.delete_simple_artist_alias(alias_id)
     assert f"An error occurred when deleting alias with ID {alias_id}" in str(
         excinfo.value
@@ -267,7 +271,7 @@ async def test_update_simple_artist_not_found(respx_mock):
     ).mock(return_value=httpx.Response(404))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerNotFoundError) as excinfo:
         await manager.update_simple_artist(artist_id, artist)
     assert "Could not find artist with MBID" in str(excinfo.value)
 
@@ -464,7 +468,7 @@ async def test_update_mbartist_not_found(respx_mock):
     ).mock(return_value=httpx.Response(404))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerNotFoundError) as excinfo:
         await manager.update_mbartist(artist_id, artist)
     assert "Could not find artist with MBID" in str(excinfo.value)
 
@@ -583,6 +587,6 @@ async def test_post_mbartist_conflict(respx_mock):
     ).mock(return_value=httpx.Response(409))
 
     # Act & Assert
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(TrackManagerConflictError) as excinfo:
         await manager.post_mbartist(artist)
     assert "Artist with MBID" in str(excinfo.value)
