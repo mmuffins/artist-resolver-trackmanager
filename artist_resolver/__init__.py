@@ -4,6 +4,10 @@ from artist_resolver.trackmanager import (
     SimpleArtistDetails,
     TrackDetails,
     TrackManager,
+    TrackManagerConflictError,
+    TrackManagerError,
+    TrackManagerHTTPError,
+    TrackManagerNotFoundError,
 )
 
 __all__ = [
@@ -12,4 +16,8 @@ __all__ = [
     "SimpleArtistDetails",
     "TrackDetails",
     "TrackManager",
+    "TrackManagerConflictError",
+    "TrackManagerError",
+    "TrackManagerHTTPError",
+    "TrackManagerNotFoundError",
 ]

@@ -10,6 +10,25 @@ import httpx
 from mutagen import id3
 
 
+class TrackManagerError(Exception):
+    """Base exception for TrackManager errors."""
+
+
+class TrackManagerHTTPError(TrackManagerError):
+    def __init__(self, message: str, response: httpx.Response):
+        super().__init__(message)
+        self.response = response
+        self.status_code = response.status_code
+
+
+class TrackManagerConflictError(TrackManagerHTTPError):
+    """Raised when the TrackManager API reports a resource conflict."""
+
+
+class TrackManagerNotFoundError(TrackManagerHTTPError):
+    """Raised when the TrackManager API cannot find a required resource."""
+
+
 class Alias:
     def __init__(
         self,
@@ -1092,8 +1111,9 @@ class TrackManager:
                 case 404:
                     return None
                 case _:
-                    raise Exception(
-                        f"Failed to fetch artist data for MBID {mbid}: {response.status_code}"
+                    raise TrackManagerHTTPError(
+                        f"Failed to fetch artist data for MBID {mbid}: {response.status_code}",
+                        response,
                     )
 
     async def list_simple_artist_franchise(self) -> dict:
@@ -1217,12 +1237,14 @@ class TrackManager:
 
             match response.status_code:
                 case 409:
-                    raise Exception(
-                        f"Artist with MBID {artist.mbid} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerConflictError(
+                        f"Artist with MBID {artist.mbid} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to create artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to create artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def post_simple_artist(self, artist: SimpleArtistDetails) -> dict:
@@ -1244,12 +1266,14 @@ class TrackManager:
 
             match response.status_code:
                 case 409:
-                    raise Exception(
-                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerConflictError(
+                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to post artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def post_simple_artist_alias(
@@ -1275,12 +1299,14 @@ class TrackManager:
 
             match response.status_code:
                 case 409:
-                    raise Exception(
-                        f"Alias with name {name} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerConflictError(
+                        f"Alias with name {name} already exists in DB: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to create alias for name {name}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to create alias for name {name}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def delete_simple_artist_alias(self, id: int) -> None:
@@ -1297,12 +1323,14 @@ class TrackManager:
                 case 200:
                     return
                 case 404:
-                    raise Exception(
-                        f"Alias with ID {id} was not found: {response.status_code}"
+                    raise TrackManagerNotFoundError(
+                        f"Alias with ID {id} was not found: {response.status_code}",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"An error occurred when deleting alias with ID {id}: {response.status_code}"
+                    raise TrackManagerHTTPError(
+                        f"An error occurred when deleting alias with ID {id}: {response.status_code}",
+                        response,
                     )
 
     async def update_mbartist(self, id: int, artist: MbArtistDetails) -> None:
@@ -1330,12 +1358,14 @@ class TrackManager:
 
             match response.status_code:
                 case 404:
-                    raise Exception(
-                        f"Could not find artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerNotFoundError(
+                        f"Could not find artist with MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def update_simple_artist(self, id: int, artist: SimpleArtistDetails) -> None:
@@ -1355,12 +1385,14 @@ class TrackManager:
 
             match response.status_code:
                 case 404:
-                    raise Exception(
-                        f"Could not find artist with MBID {artist.id}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerNotFoundError(
+                        f"Could not find artist with MBID {artist.id}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
                 case _:
-                    raise Exception(
-                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})"
+                    raise TrackManagerHTTPError(
+                        f"Failed to update artist data for MBID {artist.mbid}: {response.text} ({response.status_code} {response.reason_phrase})",
+                        response,
                     )
 
     async def get_server_health(self) -> bool:
