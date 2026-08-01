@@ -1,6 +1,7 @@
-import pytest
 from unittest.mock import MagicMock
-from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3
+
+import pytest
+from mutagen.id3 import TALB, TIT1, TIT2, TOAL, TOPE, TPE1, TPE2, TPE3
 
 
 @pytest.fixture

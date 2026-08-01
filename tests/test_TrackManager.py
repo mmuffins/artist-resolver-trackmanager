@@ -1,12 +1,14 @@
 import os
 import sys
-import pytest
-import httpx
-import respx
 from unittest.mock import AsyncMock, MagicMock, call
-from artist_resolver.trackmanager import TrackManager, MbArtistDetails, TrackDetails
+
+import httpx
+import pytest
+import respx
 from mutagen import id3
-from mutagen.id3 import TIT2, TPE1, TALB, TPE2, TIT1, TOAL, TOPE, TPE3, TXXX
+from mutagen.id3 import TALB, TIT1, TIT2, TOAL, TOPE, TPE1, TPE2, TPE3, TXXX
+
+from artist_resolver.trackmanager import MbArtistDetails, TrackDetails, TrackManager
 
 
 def create_mock_trackdetails():

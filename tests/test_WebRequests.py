@@ -1,10 +1,11 @@
-import pytest
 import httpx
+import pytest
 import respx
+
 from artist_resolver.trackmanager import (
-    TrackManager,
     MbArtistDetails,
     SimpleArtistDetails,
+    TrackManager,
 )
 
 

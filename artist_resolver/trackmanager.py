@@ -1,11 +1,11 @@
+import asyncio
 import hashlib
+import json
 import os
 import re
-import json
-import httpx
-import asyncio
 from urllib.parse import urlencode
-from typing import List, Optional
+
+import httpx
 from mutagen import id3
 
 
@@ -14,9 +14,9 @@ class Alias:
         self,
         name: str,
         type: str,
-        locale: Optional[str],
-        begin: Optional[str],
-        end: Optional[str],
+        locale: str | None,
+        begin: str | None,
+        end: str | None,
         type_id: str,
         ended: bool,
         sort_name: str,
@@ -60,9 +60,9 @@ class MbArtistDetails:
         type: str,
         disambiguation: str,
         sort_name: str,
-        aliases: List[Alias],
+        aliases: list[Alias],
         type_id: str,
-        joinphrase: Optional[str],
+        joinphrase: str | None,
         include: bool = True,
         id: int = None,
     ):
@@ -122,7 +122,7 @@ class MbArtistDetails:
         self.has_server_data = True
 
     @classmethod
-    def from_dict(cls, data: dict, artist_list: list["MbArtistDetails"]):
+    def from_dict(cls, data: dict, artist_list: list[MbArtistDetails]):
         """
         Creates artist objects based on the provided dictionary object
         """
@@ -149,7 +149,7 @@ class MbArtistDetails:
             artist_list.append(artist)
 
     @staticmethod
-    def parse_json(json_str: str) -> list["MbArtistDetails"]:
+    def parse_json(json_str: str) -> list[MbArtistDetails]:
         """
         Deserializes an artist_json string into multiple artist objects
         """
@@ -163,7 +163,6 @@ class MbArtistDetails:
         artist_list: list[MbArtistDetails] = []
         for item in flattened_data:
             MbArtistDetails.from_dict(item, artist_list)
-            pass
 
         return artist_list
 
@@ -177,7 +176,7 @@ class MbArtistDetails:
 
         def recurse(artist):
             result.append(artist)
-            if "relations" in artist and artist["relations"]:
+            if isinstance(artist, dict) and artist.get("relations"):
                 for relation in artist["relations"]:
                     recurse(relation)
 
@@ -337,9 +336,9 @@ class SimpleArtistDetails(MbArtistDetails):
         type: str,
         disambiguation: str,
         sort_name: str,
-        aliases: List[Alias],
+        aliases: list[Alias],
         type_id: str,
-        joinphrase: Optional[str],
+        joinphrase: str | None,
         include: bool = True,
         product: str = "",
         product_id: int = None,
@@ -377,7 +376,7 @@ class SimpleArtistDetails(MbArtistDetails):
     @staticmethod
     def parse_simple_artist(
         artist_list: list[str], product: str, product_id: int
-    ) -> list["SimpleArtistDetails"]:
+    ) -> list[SimpleArtistDetails]:
         """
         Deserializes a string containing a list of artists into artist objects
         """
@@ -386,7 +385,7 @@ class SimpleArtistDetails(MbArtistDetails):
             return []
 
         split_artists = SimpleArtistDetails.split_artist(artist_list)
-        simple_artist_list: List["SimpleArtistDetails"] = []
+        simple_artist_list: list[SimpleArtistDetails] = []
         for artist in split_artists:
             simple_artist_list.append(
                 SimpleArtistDetails.from_simple_artist(artist, product, product_id)
@@ -571,19 +570,19 @@ class TrackDetails:
         self.file_path: str = file_path
         self.manager: TrackManager = manager
         self.title: str = None
-        self.artist: List[str] = []
+        self.artist: list[str] = []
         self.mb_track_id: str = None
         self.mb_album_id: str = None
         self.album: str = None
         self.album_artist: str = None
         self.grouping: str = None
         self.original_album: str = None
-        self.original_artist: List[str] = []
+        self.original_artist: list[str] = []
         self.original_title: str = None
         self.product: str = None
         self.artist_relations = None
         self.update_file: bool = True
-        self.artist_details: List[MbArtistDetails] = []
+        self.artist_details: list[MbArtistDetails] = []
 
     def __str__(self):
         return f"{self.title}"
@@ -938,7 +937,7 @@ class TrackManager:
         """
 
         artist_details = MbArtistDetails.parse_json(artist_relations_json)
-        returnObj: List[MbArtistDetails] = []
+        returnObj: list[MbArtistDetails] = []
         for artist in artist_details:
             if artist.mbid not in self.artist_data:
                 self.artist_data[artist.mbid] = artist
